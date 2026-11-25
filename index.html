@@ -7906,7 +7906,7 @@ function renderMilestones(){
 function renderFamilyFinance(){
   const el=document.getElementById('family-finance-content');if(!el)return;
   const f=richlyExtras.family;
-  el.innerHTML='<label style="display:flex;gap:8px;align-items:center;margin-bottom:10px;"><input type="checkbox" '+(f.enabled?'checked':'')+' onchange="richlyExtras.family.enabled=this.checked;persistRichlyExtras();renderFamilyFinance()"/> Enable household mode on this device</label><div class="planning-muted">Household profiles and member labels are stored locally in this account/device. This does not create separate logins or share data securely between different accounts.</div><div style="display:flex;gap:8px;margin-top:10px;"><input id="family-member-name" class="form-input" placeholder="Member name"/><select id="family-member-role" class="form-input" style="max-width:130px;"><option>Viewer</option><option>Editor</option><option>Admin</option></select><button class="filter-btn" onclick="addFamilyMember()">Add</button></div><div>'+f.members.map((m,i)=>'<div class="planning-row"><span>'+m.name+' <span class="planning-muted">· '+m.role+'</span></span><button class="filter-btn" onclick="removeFamilyMember('+i+')">Remove</button></div>').join('')+'</div>';
+  el.innerHTML='<label style="display:flex;gap:8px;align-items:center;margin-bottom:10px;"><input type="checkbox" '+(f.enabled?'checked':'')+' onchange="richlyExtras.family.enabled=this.checked;persistRichlyExtras();renderFamilyFinance()"/> Enable household mode on this device</label><div class="planning-muted">Household profiles and member labels are stored locally on this device. This does not create separate logins or secure cross-account sharing; role labels are informational and do not enforce access permissions.</div><div style="display:flex;gap:8px;margin-top:10px;"><input id="family-member-name" class="form-input" placeholder="Member name"/><select id="family-member-role" class="form-input" style="max-width:130px;"><option>Viewer</option><option>Editor</option><option>Admin</option></select><button class="filter-btn" onclick="addFamilyMember()">Add</button></div><div>'+f.members.map((m,i)=>'<div class="planning-row"><span>'+m.name+' <span class="planning-muted">· '+m.role+'</span></span><button class="filter-btn" onclick="removeFamilyMember('+i+')">Remove</button></div>').join('')+'</div>';
 }
 function addFamilyMember(){const n=document.getElementById('family-member-name').value.trim(),role=document.getElementById('family-member-role').value;if(!n)return;richlyExtras.family.members.push({name:n,role});persistRichlyExtras();renderFamilyFinance();}
 function removeFamilyMember(i){richlyExtras.family.members.splice(i,1);persistRichlyExtras();renderFamilyFinance();}
@@ -8023,6 +8023,36 @@ document.addEventListener('DOMContentLoaded',()=>{installMoneyToggle();installQu
       '<div class="planning-muted">Step-up SIP assumes year-end annual increases and month-end deposits. FD simple interest is shown alongside the existing compounding calculator for comparison. EMI prepayment assumes the extra amount reduces principal each month. No tax or fee effects included.</div>';
   };
 })();
+</script>
+
+<script>
+// Blur all displayed rupee figures by default, including values rendered later.
+function richlyMarkMoney(root){
+  if(!root||!document.body.classList.contains('money-hidden'))return;
+  const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
+  const nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
+  nodes.forEach(node=>{
+    const parent=node.parentElement;
+    if(!parent||parent.closest('.money-sensitive,script,style,textarea,input,select,button'))return;
+    if(node.nodeValue&&node.nodeValue.includes('₹')){
+      const span=document.createElement('span');span.className='money-sensitive';span.textContent=node.nodeValue;
+      node.parentNode.replaceChild(span,node);
+    }
+  });
+}
+const richlyMoneyObserver=new MutationObserver(records=>{
+  if(!document.body.classList.contains('money-hidden'))return;
+  records.forEach(r=>{r.addedNodes.forEach(n=>{if(n.nodeType===Node.TEXT_NODE)richlyMarkMoney(n.parentElement);else if(n.nodeType===Node.ELEMENT_NODE)richlyMarkMoney(n);});});
+});
+document.addEventListener('DOMContentLoaded',()=>{
+  richlyMarkMoney(document.getElementById('app'));
+  richlyMoneyObserver.observe(document.getElementById('app')||document.body,{childList:true,subtree:true});
+});
+const _richlySetMoneyVisibility=setMoneyVisibility;
+setMoneyVisibility=function(show){
+  _richlySetMoneyVisibility(show);
+  if(!show)richlyMarkMoney(document.getElementById('app'));
+};
 </script>
 </body>
 </html>
