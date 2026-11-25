@@ -4964,19 +4964,65 @@ function detectAndParseBankCSV(text){
   return{rows:out,count:out.length};
 }
 
+
+function txNormalizeDescription(value){
+  return String(value||'').toUpperCase().replace(/[^A-Z0-9]+/g,' ').replace(/\s+/g,' ').trim();
+}
+function txFingerprint(tx){
+  const account=String(tx.account||'').trim().toUpperCase().replace(/\s+/g,' ');
+  const date=String(tx.date||'');
+  const amount=(Number(tx.amount)||0).toFixed(2);
+  const direction=tx.direction||tx.type||'expense';
+  const desc=txNormalizeDescription(tx.description||tx.note||'');
+  return [account,date,amount,direction,desc].join('|');
+}
+function txWeakFingerprint(tx){
+  const account=String(tx.account||'').trim().toUpperCase().replace(/\s+/g,' ');
+  return [account,String(tx.date||''),(Number(tx.amount)||0).toFixed(2),tx.direction||tx.type||'expense'].join('|');
+}
+function txEsc(value){
+  return String(value??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
 function showTxCSVPreview(result){
   const account=(document.getElementById('txcsv-account').value||'').trim()||'Unlabeled';
-  const existing=state.transactions.filter(t=>t.account&&t.account.toLowerCase()===account.toLowerCase());
+  const existingExact=new Set(),existingWeak=new Map();
+  state.transactions.filter(t=>String(t.account||'').trim().toLowerCase()===account.toLowerCase()).forEach(t=>{
+    existingExact.add(txFingerprint(t));
+    const weak=txWeakFingerprint(t);
+    if(!existingWeak.has(weak))existingWeak.set(weak,[]);
+    existingWeak.get(weak).push(t);
+  });
 
+  const seenExact=new Set(),seenWeak=new Set();
+  const parserStats=result.stats||{skipped:0,errors:0};
   txCsvParsed=result.rows.map(r=>{
-    const isDup=existing.some(e=>e.date===r.date&&Math.abs(e.amount-r.amount)<1);
-    return{...r,include:!isDup,isDup};
+    const exact=txFingerprint({...r,account});
+    const weak=txWeakFingerprint({...r,account});
+    let isDup=false,dupReason='';
+    if(existingExact.has(exact)){isDup=true;dupReason='already imported';}
+    else if(existingWeak.has(weak)){
+      const desc=txNormalizeDescription(r.description);
+      const sameDescription=existingWeak.get(weak).some(e=>{
+        const ed=txNormalizeDescription(e.description||'');
+        return ed===desc||ed.includes(desc)||desc.includes(ed);
+      });
+      if(sameDescription){isDup=true;dupReason='matching existing transaction';}
+    }
+    if(!isDup&&seenExact.has(exact)){isDup=true;dupReason='duplicate in this file';}
+    const row={...r,include:!isDup,isDup,dupReason,account};
+    if(!isDup){seenExact.add(exact);seenWeak.add(weak);}
+    return row;
   });
 
   const dupCount=txCsvParsed.filter(r=>r.isDup).length;
-  document.getElementById('txcsv-preview-title').textContent=`${result.count} transactions detected`;
-  document.getElementById('txcsv-summary').textContent=
-    `Account: "${account}" · ${dupCount>0?dupCount+' possible duplicate(s) unchecked — review before including · ':''}${txCsvParsed.length-dupCount} new`;
+  const newCount=txCsvParsed.filter(r=>!r.isDup).length;
+  const skipped=Number(parserStats.skipped)||0;
+  const errors=Number(parserStats.errors)||0;
+  document.getElementById('txcsv-preview-title').textContent=(result.count||txCsvParsed.length)+' transactions detected';
+  document.getElementById('txcsv-summary').innerHTML=
+    '<b>New:</b> '+newCount+' &nbsp;·&nbsp; <b>Duplicates:</b> '+dupCount+
+    ' &nbsp;·&nbsp; <b>Skipped:</b> '+skipped+' &nbsp;·&nbsp; <b>Errors:</b> '+errors;
   document.getElementById('txcsv-error').textContent='';
   renderTxCSVRows();
   document.getElementById('txcsv-preview').style.display='block';
@@ -4984,27 +5030,30 @@ function showTxCSVPreview(result){
 
 function renderTxCSVRows(){
   const el=document.getElementById('txcsv-rows');
-  const catOptions=getAllCats().map(c=>`<option value="${c}">${c}</option>`).join('');
+  const catOptions=getAllCats().map(c=>'<option value="'+txEsc(c)+'">'+txEsc(c)+'</option>').join('');
   el.innerHTML=txCsvParsed.map((r,i)=>{
     const amtColor=r.direction==='debit'?'#f16b6b':'#3ecf8e';
-    return`<div style="display:flex;gap:8px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--card-border);${r.isDup?'opacity:0.75;':''}">
-      <input type="checkbox" id="txcsv-inc-${i}" ${r.include?'checked':''} onchange="txCsvParsed[${i}].include=this.checked" style="margin-top:4px;flex-shrink:0;width:16px;height:16px;"/>
-      <div style="flex:1;min-width:0;">
-        <div style="display:flex;justify-content:space-between;gap:8px;">
-          <div style="font-size:12px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${r.description}</div>
-          <div style="font-size:12px;font-weight:800;color:${amtColor};white-space:nowrap;">${r.direction==='debit'?'-':'+'}${fmtINR(r.amount)}</div>
-        </div>
-        <div style="display:flex;gap:6px;align-items:center;margin-top:5px;flex-wrap:wrap;">
-          <span style="font-size:10px;color:var(--text2);">${r.date}</span>
-          <select id="txcsv-dir-${i}" onchange="txCsvParsed[${i}].direction=this.value;renderTxCSVRows();" style="background:var(--bg3);border:1px solid #333;border-radius:6px;padding:2px 5px;color:#f5f5f5;font-size:10px;">
-            <option value="debit" ${r.direction==='debit'?'selected':''}>Expense</option>
-            <option value="credit" ${r.direction==='credit'?'selected':''}>Income</option>
-          </select>
-          ${r.direction==='debit'?`<select id="txcsv-cat-${i}" onchange="txCsvParsed[${i}].category=this.value;" style="background:var(--bg3);border:1px solid #333;border-radius:6px;padding:2px 5px;color:#f5f5f5;font-size:10px;">${catOptions.replace(`value="${r.category}"`,`value="${r.category}" selected`)}</select>`:''}
-          ${r.isDup?'<span style="font-size:10px;color:#f0a84c;font-weight:700;">⚠️ possible duplicate</span>':''}
-        </div>
-      </div>
-    </div>`;
+    const selectedCat=txEsc(r.category||'Other');
+    const catHtml=r.direction==='debit'
+      ?'<select id="txcsv-cat-'+i+'" onchange="txCsvParsed['+i+'].category=this.value;" style="background:var(--bg3);border:1px solid #333;border-radius:6px;padding:2px 5px;color:var(--text);font-size:10px;">'+catOptions.replace('value="'+selectedCat+'"','value="'+selectedCat+'" selected')+'</select>'
+      :'';
+    return '<div style="display:flex;gap:8px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--card-border);'+(r.isDup?'opacity:0.72;':'')+'">'+
+      '<input type="checkbox" id="txcsv-inc-'+i+'" '+(r.include?'checked':'')+' onchange="txCsvParsed['+i+'].include=this.checked" style="margin-top:4px;flex-shrink:0;width:16px;height:16px;"/>'+
+      '<div style="flex:1;min-width:0;">'+
+        '<div style="display:flex;justify-content:space-between;gap:8px;">'+
+          '<div style="font-size:12px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+txEsc(r.description)+'">'+txEsc(r.description)+'</div>'+
+          '<div style="font-size:12px;font-weight:800;color:'+amtColor+';white-space:nowrap;">'+(r.direction==='debit'?'-':'+')+fmtINR(r.amount)+'</div>'+
+        '</div>'+
+        '<div style="display:flex;gap:6px;align-items:center;margin-top:5px;flex-wrap:wrap;">'+
+          '<span style="font-size:10px;color:var(--text2);">'+txEsc(r.date)+'</span>'+
+          '<select id="txcsv-dir-'+i+'" onchange="txCsvParsed['+i+'].direction=this.value;renderTxCSVRows();" style="background:var(--bg3);border:1px solid #333;border-radius:6px;padding:2px 5px;color:var(--text);font-size:10px;">'+
+            '<option value="debit" '+(r.direction==='debit'?'selected':'')+'>Expense</option>'+
+            '<option value="credit" '+(r.direction==='credit'?'selected':'')+'>Income</option>'+
+          '</select>'+catHtml+
+          (r.isDup?'<span style="font-size:10px;color:#f0a84c;font-weight:700;">⚠️ '+txEsc(r.dupReason||'possible duplicate')+'</span>':'')+
+        '</div>'+
+      '</div>'+
+    '</div>';
   }).join('');
 }
 
@@ -5013,24 +5062,32 @@ function importTxCSVConfirm(){
   if(!account)return alert('Please enter an Account / Card name so this batch can be tracked and de-duplicated correctly.');
   const payment=document.getElementById('txcsv-stype').value;
   const selected=txCsvParsed.filter(r=>r.include);
-  if(selected.length===0)return alert('No transactions selected to import.');
+  if(selected.length===0)return alert('No new transactions selected to import.');
 
-  let added=0;
+  const now=new Date().toISOString();
+  const existingExact=new Set(state.transactions.map(txFingerprint));
+  let added=0,skippedAtConfirm=0;
+
   selected.forEach(r=>{
+    const candidate={...r,account};
+    const exact=txFingerprint(candidate),weak=txWeakFingerprint(candidate);
+    if(existingExact.has(exact)){skippedAtConfirm++;return;}
     const type=r.direction==='debit'?'expense':'income';
     state.transactions.push({
       id:uid(),description:r.description,amount:r.amount,type,
       category:type==='expense'?(r.category||'Other'):'',
       date:r.date,note:'',person:'',
       payment:type==='expense'?payment:'',
-      account,imported:true
+      account,imported:true,importSource:'bank_statement',
+      importedAt:now,importFingerprint:exact
     });
-    added++;
+    existingExact.add(exact);added++;
   });
+
   saveData();renderExpenses();renderDashboard();updateHeader();
   clearTxCSVPreview();
   document.getElementById('txcsv-file-input').value='';
-  showToastMsg(`✅ Imported ${added} transaction${added!==1?'s':''} from "${account}"`);
+  showToastMsg('✅ Imported '+added+' transaction'+(added!==1?'s':'')+' from "'+account+'"'+(skippedAtConfirm?' · '+skippedAtConfirm+' duplicate'+(skippedAtConfirm!==1?'s':'')+' skipped':''));
 }
 
 function clearTxCSVPreview(){
@@ -5038,14 +5095,15 @@ function clearTxCSVPreview(){
   document.getElementById('txcsv-preview').style.display='none';
   document.getElementById('txcsv-rows').innerHTML='';
   document.getElementById('txcsv-error').textContent='';
+  document.getElementById('txcsv-summary').textContent='';
 }
 
-// Populate the Account/Card datalist with previously used account names
+// Populate the Account / Card datalist with previously used account names
 function updateTxAccountList(){
   const dl=document.getElementById('txcsv-account-list');
   if(!dl)return;
   const accounts=[...new Set(state.transactions.filter(t=>t.account).map(t=>t.account))];
-  dl.innerHTML=accounts.map(a=>`<option value="${a}"></option>`).join('');
+  dl.innerHTML=accounts.map(a=>'<option value="'+txEsc(a)+'"></option>').join('');
 }
 
 // ═══════════════════════════════════════════════════════
