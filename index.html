@@ -7410,11 +7410,30 @@ function getFullNetWorth(){
   return getTotalAssets()-getTotalLiabilities();
 }
 
+function markBalanceUpdated(record,previousValue,source='manual'){
+  const at=new Date().toISOString();
+  const entry={at,source,previousValue:previousValue===null?null:(Number(previousValue)||0),newValue:Number(record.value)||0};
+  record.updatedAt=at;
+  record.updateSource=source;
+  record.updateHistory=Array.isArray(record.updateHistory)?record.updateHistory:[];
+  record.updateHistory.unshift(entry);
+  record.updateHistory=record.updateHistory.slice(0,10);
+}
+function balanceUpdateLabel(record){
+  if(!record.updatedAt)return 'Update date not tracked';
+  const date=new Date(record.updatedAt);
+  if(Number.isNaN(date.getTime()))return 'Update date not tracked';
+  const source=record.updateSource==='zerodha'?'Zerodha':'Manual update';
+  return source+' · '+date.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+}
+
 function addAsset(){
   const name=document.getElementById('ast-name').value.trim();
   const value=parseFloat(document.getElementById('ast-value').value);
   if(!name||isNaN(value)||value<0)return alert('Please enter asset name and value.');
-  state.assets.push({id:uid(),name,value,cat:document.getElementById('ast-cat').value,note:document.getElementById('ast-note').value.trim()});
+  const record={id:uid(),name,value,cat:document.getElementById('ast-cat').value,note:document.getElementById('ast-note').value.trim()};
+  markBalanceUpdated(record,null);
+  state.assets.push(record);
   document.getElementById('ast-name').value='';document.getElementById('ast-value').value='';document.getElementById('ast-note').value='';
   saveData();renderAssets();updateHeader();autoSnapshot();toast();
 }
@@ -7422,7 +7441,9 @@ function addLiability(){
   const name=document.getElementById('lib-name').value.trim();
   const value=parseFloat(document.getElementById('lib-value').value);
   if(!name||isNaN(value)||value<0)return alert('Please enter debt name and amount.');
-  state.liabilities.push({id:uid(),name,value,cat:document.getElementById('lib-cat').value,note:document.getElementById('lib-note').value.trim()});
+  const record={id:uid(),name,value,cat:document.getElementById('lib-cat').value,note:document.getElementById('lib-note').value.trim()};
+  markBalanceUpdated(record,null);
+  state.liabilities.push(record);
   document.getElementById('lib-name').value='';document.getElementById('lib-value').value='';document.getElementById('lib-note').value='';
   saveData();renderAssets();updateHeader();autoSnapshot();toast();
 }
@@ -7437,9 +7458,11 @@ function editAsset(id){
   const newVal=parseFloat(prompt('Current value (₹):',a.value));
   if(isNaN(newVal))return;
   const newNote=prompt('Notes (optional):',a.note||'');
+  const previousValue=a.value;
   a.name=newName.trim()||a.name;
   a.value=newVal;
   a.note=newNote||'';
+  markBalanceUpdated(a,previousValue);
   saveData();renderAssets();updateHeader();autoSnapshot();toast();
 }
 
@@ -7451,19 +7474,35 @@ function editLiability(id){
   const newVal=parseFloat(prompt('Outstanding amount (₹):',l.value));
   if(isNaN(newVal))return;
   const newNote=prompt('Notes (optional):',l.note||'');
+  const previousValue=l.value;
   l.name=newName.trim()||l.name;
   l.value=newVal;
   l.note=newNote||'';
+  markBalanceUpdated(l,previousValue);
   saveData();renderAssets();updateHeader();autoSnapshot();toast();
 }
 
 function updateAssetValue(id,val){
   const a=state.assets.find(x=>x.id===id);
-  if(a){a.value=parseFloat(val)||0;saveData();renderAssets();updateHeader();autoSnapshot();}
+  if(a){
+    const nextValue=parseFloat(val);
+    if(!Number.isFinite(nextValue)||nextValue<0){renderAssets();return alert('Please enter a valid non-negative balance.');}
+    const previousValue=a.value;
+    a.value=nextValue;
+    markBalanceUpdated(a,previousValue);
+    saveData();renderAssets();updateHeader();autoSnapshot();
+  }
 }
 function updateLiabilityValue(id,val){
   const l=state.liabilities.find(x=>x.id===id);
-  if(l){l.value=parseFloat(val)||0;saveData();renderAssets();updateHeader();autoSnapshot();}
+  if(l){
+    const nextValue=parseFloat(val);
+    if(!Number.isFinite(nextValue)||nextValue<0){renderAssets();return alert('Please enter a valid non-negative amount.');}
+    const previousValue=l.value;
+    l.value=nextValue;
+    markBalanceUpdated(l,previousValue);
+    saveData();renderAssets();updateHeader();autoSnapshot();
+  }
 }
 
 function renderAssets(){
@@ -7485,6 +7524,7 @@ function renderAssets(){
         <div style="flex:1;min-width:0;">
           <div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${a.name}</div>
           <div style="font-size:10px;color:#888;">${a.cat}${a.note?' · '+a.note:''}</div>
+          <div style="font-size:10px;color:#777;margin-top:2px;">${balanceUpdateLabel(a)}</div>
         </div>
         <span class="ast-value" style="display:inline-block;border-radius:6px;min-width:80px;">
           <input type="number" value="${a.value}" onchange="updateAssetValue('${a.id}',this.value)"
@@ -7504,6 +7544,7 @@ function renderAssets(){
         <div style="flex:1;min-width:0;">
           <div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${l.name}</div>
           <div style="font-size:10px;color:#888;">${l.cat}${l.note?' · '+l.note:''}</div>
+          <div style="font-size:10px;color:#777;margin-top:2px;">${balanceUpdateLabel(l)}</div>
         </div>
         <span class="lib-value" style="display:inline-block;border-radius:6px;min-width:80px;">
           <input type="number" value="${l.value}" onchange="updateLiabilityValue('${l.id}',this.value)"
