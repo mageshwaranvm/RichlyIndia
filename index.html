@@ -7979,5 +7979,50 @@ const _richlyInitApp=initApp;
 initApp=function(){_richlyInitApp();installQuickAdd();installMobileNav();setMoneyVisibility(false);renderActionDashboard();};
 document.addEventListener('DOMContentLoaded',()=>{installMoneyToggle();installQuickAdd();installMobileNav();document.body.classList.add('money-hidden');});
 </script>
+
+<script>
+// Additional 4D calculator scenarios: prepayment, SIP step-up/inflation,
+// cumulative vs simple-interest FD, tax-year disclosure and XIRR validation.
+(function(){
+  const originalQuality=renderCalculatorQuality;
+  renderCalculatorQuality=function(){
+    originalQuality();
+    const host=document.getElementById('calc-quality-note');
+    if(!host||document.getElementById('richly-calculator-scenarios'))return;
+    const panel=document.createElement('div');panel.id='richly-calculator-scenarios';
+    panel.innerHTML='<div class="card-title" style="margin-top:18px;">Advanced what-if scenarios</div>'+
+      '<div class="form-grid form-grid-2">'+
+      '<div><label class="form-label">Extra EMI payment / month (₹)</label><input id="q-extra-emi" class="form-input" type="number" min="0" value="0" oninput="runRichlyScenarios()"></div>'+
+      '<div><label class="form-label">SIP annual step-up (%)</label><input id="q-sip-step" class="form-input" type="number" min="0" max="100" value="0" oninput="runRichlyScenarios()"></div>'+
+      '<div><label class="form-label">Inflation assumption (%)</label><input id="q-inflation" class="form-input" type="number" min="0" max="30" value="6" oninput="runRichlyScenarios()"></div>'+
+      '<div><label class="form-label">FIRE safety buffer (%)</label><input id="q-fire-buffer" class="form-input" type="number" min="0" max="100" value="15" oninput="runRichlyScenarios()"></div></div>'+
+      '<div id="q-scenario-output" style="margin-top:10px;"></div>'+
+      '<div class="planning-muted" style="margin-top:12px;">Tax calculator currently uses hard-coded FY 2024–25 slabs. It is not a current-FY tax engine; verify the applicable year, deductions, rebates and rules before using it for filing. XIRR requires valid dated cash flows with at least one negative investment and one positive receipt/current value.</div>';
+    host.appendChild(panel);runRichlyScenarios();
+  };
+  window.runRichlyScenarios=function(){
+    const out=document.getElementById('q-scenario-output');if(!out)return;
+    const emi=state.emi||{},p=Math.max(0,+emi.amount||0),r=Math.max(0,+emi.rate||0)/1200,n=Math.max(1,Math.round((+emi.years||1)*12));
+    const monthly=r?p*r*Math.pow(1+r,n)/(Math.pow(1+r,n)-1):p/n;
+    const extra=Math.max(0,Number(document.getElementById('q-extra-emi')?.value)||0);
+    let bal=p,elapsed=0,intPaid=0;
+    while(bal>.01&&elapsed<1200){const intr=bal*r;intPaid+=intr;bal=Math.max(0,bal+intr-monthly-extra);elapsed++;}
+    const sip=state.sip||{},step=Math.min(100,Math.max(0,Number(document.getElementById('q-sip-step')?.value)||0))/100;
+    const sr=Math.max(0,+sip.rate||0)/1200,years=Math.max(1,+sip.years||1);let amount=Math.max(0,+sip.sip||0),fv=0,invested=0;
+    for(let m=1;m<=years*12;m++){fv=fv*(1+sr)+amount;invested+=amount;if(m%12===0)amount*=1+step;}
+    const infl=Math.min(30,Math.max(0,Number(document.getElementById('q-inflation')?.value)||0))/100;
+    const real=fv/Math.pow(1+infl,years);
+    const buffer=Math.min(100,Math.max(0,Number(document.getElementById('q-fire-buffer')?.value)||0))/100;
+    const fi=state.fi||{},base=(Math.max(0,+fi.exp||0)*12)/(Math.max(.1,+fi.swr||3.5)/100),fire=base*(1+buffer);
+    const fd=state.fd||{},simple=(+fd.amount||0)*(1+(+fd.rate||0)/100*(+fd.years||0));
+    out.innerHTML='<div class="planning-row"><span>EMI with extra payment</span><b>'+(extra?elapsed+' months · '+fmtINR(intPaid)+' interest':'Enter extra payment to model prepayment')+'</b></div>'+
+      '<div class="planning-row"><span>Step-up SIP future value</span><b>'+fmtINR(fv)+'</b></div>'+
+      '<div class="planning-row"><span>Inflation-adjusted SIP value</span><b>'+fmtINR(real)+'</b></div>'+
+      '<div class="planning-row"><span>FD simple-interest comparison</span><b>'+fmtINR(simple)+'</b></div>'+
+      '<div class="planning-row"><span>FIRE target with safety buffer</span><b>'+fmtINR(fire)+'</b></div>'+
+      '<div class="planning-muted">Step-up SIP assumes year-end annual increases and month-end deposits. FD simple interest is shown alongside the existing compounding calculator for comparison. EMI prepayment assumes the extra amount reduces principal each month. No tax or fee effects included.</div>';
+  };
+})();
+</script>
 </body>
 </html>
