@@ -95,6 +95,12 @@ body.light-mode{
   --red:#d94f4f;--red-dim:#d94f4f12;
   --blue:#2980c4;--blue-dim:#2980c412;
 }
+body.theme-midnight{--bg:#080d18;--bg2:#0e1626;--bg3:#152238;--bg4:#1d2d47;--border:#20324c;--border2:#2b4261;--text:#eaf2ff;--text2:#91a5c2;--text3:#5f7492;--card-bg:#101a2b;--card-border:#29405e;--input-bg:#111e31;--input-border:#2b4261;--input-color:#eaf2ff;--sidebar-bg:#0b1422;--header-bg:#0b1422;--gold:#65b9ff;--gold-light:#9bd3ff;--gold-dim:#65b9ff20;--gold-mid:#65b9ff40;--green:#45d6a0;--red:#ff707a;--blue:#65b9ff;}
+body.theme-forest{--bg:#09130f;--bg2:#0f1d17;--bg3:#162920;--bg4:#1e3529;--border:#203b2d;--border2:#2b4d3a;--text:#eaf7ef;--text2:#91aa9a;--text3:#5d7567;--card-bg:#102119;--card-border:#2b4939;--input-bg:#12261c;--input-border:#2b4d3a;--input-color:#eaf7ef;--sidebar-bg:#0b1812;--header-bg:#0b1812;--gold:#55d98b;--gold-light:#8ee8af;--gold-dim:#55d98b20;--gold-mid:#55d98b40;--green:#55d98b;--red:#ff7777;--blue:#63b7ff;}
+body.theme-plum{--bg:#120b18;--bg2:#1b1025;--bg3:#281735;--bg4:#382047;--border:#402750;--border2:#523464;--text:#f7edff;--text2:#ad98bb;--text3:#75617f;--card-bg:#1e1229;--card-border:#4a2c5a;--input-bg:#21142e;--input-border:#523464;--input-color:#f7edff;--sidebar-bg:#160d20;--header-bg:#160d20;--gold:#c98cff;--gold-light:#e0b9ff;--gold-dim:#c98cff20;--gold-mid:#c98cff40;--green:#54d9a0;--red:#ff748e;--blue:#75b7ff;}
+body.theme-ocean{--bg:#071519;--bg2:#0b2026;--bg3:#103039;--bg4:#16404b;--border:#1c4650;--border2:#255c68;--text:#e8fbff;--text2:#8eabb2;--text3:#58777f;--card-bg:#0d252c;--card-border:#25525d;--input-bg:#102b33;--input-border:#255c68;--input-color:#e8fbff;--sidebar-bg:#091c21;--header-bg:#091c21;--gold:#48d9df;--gold-light:#8be9ed;--gold-dim:#48d9df20;--gold-mid:#48d9df40;--green:#55d9a2;--red:#ff7676;--blue:#5fc9ff;}
+body.theme-custom{--bg:var(--custom-bg,#111);--bg2:var(--custom-bg2,#191919);--bg3:var(--custom-bg3,#242424);--bg4:var(--custom-bg4,#303030);--border:var(--custom-border,#333);--border2:var(--custom-border2,#444);--text:#f5f5f5;--text2:#a0a0a0;--text3:#707070;--card-bg:var(--custom-card,#1c1c1c);--card-border:var(--custom-border2,#444);--input-bg:var(--custom-bg2,#191919);--input-border:var(--custom-border2,#444);--input-color:#f5f5f5;--sidebar-bg:var(--custom-bg2,#191919);--header-bg:var(--custom-bg2,#191919);--gold:var(--custom-accent,#f0ff44);--gold-light:var(--custom-accent,#f0ff44);--gold-dim:#f0ff4420;--gold-mid:#f0ff4440;}
+.theme-picker{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:10px}.theme-swatch{border:1px solid var(--card-border);background:var(--bg2);color:var(--text);border-radius:10px;padding:9px 4px;cursor:pointer;font-size:10px;font-weight:700}.theme-swatch:hover{border-color:var(--gold)}.theme-swatch.active{border:2px solid var(--gold);box-shadow:0 0 0 2px var(--gold-dim)}.theme-dot{width:24px;height:24px;border-radius:50%;margin:0 auto 5px;border:2px solid #ffffff30}.custom-theme-row{display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap}.custom-theme-row label{font-size:11px;color:var(--text2);display:flex;align-items:center;gap:6px}.custom-theme-row input[type=color]{width:34px;height:28px;border:1px solid var(--border2);border-radius:7px;padding:2px;cursor:pointer}@media(max-width:600px){.theme-picker{grid-template-columns:repeat(3,1fr)}}
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{
   height:100%;background:var(--bg);color:var(--text);
@@ -1919,12 +1925,30 @@ body.privacy-mode .result-val{
 
         <!-- Quick toggles -->
         <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
-          <button id="theme-toggle-btn" onclick="toggleTheme(this)" style="flex:1;min-width:120px;background:#1e1e1e;border:1px solid #333;color:#f5f5f5;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">🌙 Dark Mode</button>
-          <button id="privacy-toggle-btn" onclick="togglePrivacy(this)" style="flex:1;min-width:120px;background:#1e1e1e;border:1px solid #333;color:#f5f5f5;border-radius:10px;padding:10px 14px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">🔏 Privacy Mode: OFF</button>
+          <button onclick="document.getElementById('theme-settings').scrollIntoView({behavior:'smooth',block:'center'})" style="flex:1;min-width:120px;background:var(--bg2);border:1px solid var(--card-border);color:var(--text);border-radius:10px;padding:10px 14px;font-size:13px;font-weight:600;cursor:pointer;">🎨 Themes</button>
+          <button id="privacy-toggle-btn" onclick="togglePrivacy(this)" style="flex:1;min-width:120px;background:var(--bg2);border:1px solid var(--card-border);color:var(--text);border-radius:10px;padding:10px 14px;font-size:13px;font-weight:600;cursor:pointer;">🔏 Privacy Mode: OFF</button>
         </div>
         <div class="card-grid-2">
-          <div class="card" style="border-top:3px solid #f0ff44;">
-            <div class="card-title" style="color:#f0ff44;">👤 Account</div>
+          <div class="card" id="theme-settings" style="border-top:3px solid var(--gold);">
+            <div class="card-title" style="color:var(--gold);">🎨 Themes</div>
+            <div style="font-size:12px;color:var(--text2);margin-bottom:8px;">Choose a default theme or make your own.</div>
+            <div class="theme-picker">
+              <button class="theme-swatch" data-theme="richly" onclick="setTheme('richly')"><div class="theme-dot" style="background:linear-gradient(135deg,#0f0f0d 50%,#c9a84c 50%);"></div>Richly Gold</button>
+              <button class="theme-swatch" data-theme="midnight" onclick="setTheme('midnight')"><div class="theme-dot" style="background:linear-gradient(135deg,#080d18 50%,#65b9ff 50%);"></div>Midnight</button>
+              <button class="theme-swatch" data-theme="forest" onclick="setTheme('forest')"><div class="theme-dot" style="background:linear-gradient(135deg,#09130f 50%,#55d98b 50%);"></div>Forest</button>
+              <button class="theme-swatch" data-theme="plum" onclick="setTheme('plum')"><div class="theme-dot" style="background:linear-gradient(135deg,#120b18 50%,#c98cff 50%);"></div>Plum</button>
+              <button class="theme-swatch" data-theme="ocean" onclick="setTheme('ocean')"><div class="theme-dot" style="background:linear-gradient(135deg,#071519 50%,#48d9df 50%);"></div>Ocean</button>
+              <button class="theme-swatch" data-theme="light" onclick="setTheme('light')"><div class="theme-dot" style="background:linear-gradient(135deg,#f7f4ee 50%,#9a7a2e 50%);"></div>Light</button>
+            </div>
+            <div class="custom-theme-row">
+              <label>Accent <input id="custom-accent" type="color" value="#f0ff44"/></label>
+              <label>Background <input id="custom-bg" type="color" value="#111111"/></label>
+              <button class="btn" onclick="updateCustomTheme()" style="padding:7px 12px;">✨ Custom</button>
+            </div>
+          </div>
+
+          <div class="card" style="border-top:3px solid var(--gold);">
+            <div class="card-title" style="color:var(--gold);">👤 Account</div>
             <div style="margin-bottom:16px;">
               <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Display Name</div>
               <div style="display:flex;gap:8px;">
@@ -3948,31 +3972,16 @@ function onNumChange(rangeId, txtId){
   slider.value=val;
 }
 
-// ── Theme Toggle ───────────────────────────────────────
-function toggleTheme(btn){
-  document.body.classList.toggle('light-mode');
-  const isLight=document.body.classList.contains('light-mode');
-  localStorage.setItem('richly_theme',isLight?'light':'dark');
-  // Update all theme buttons
-  document.querySelectorAll('#theme-toggle-btn').forEach(b=>{
-    b.textContent=isLight?'☀️ Light Mode':'🌙 Dark Mode';
-    b.style.background=isLight?'#f0f2f5':'#1e1e1e';
-    b.style.color=isLight?'#333':'#f5f5f5';
-    b.style.borderColor=isLight?'#ccc':'#333';
-  });
-}
-function applyTheme(){
-  const t=localStorage.getItem('richly_theme');
-  if(t==='light'){
-    document.body.classList.add('light-mode');
-    document.querySelectorAll('#theme-toggle-btn').forEach(b=>{
-      b.textContent='☀️ Light Mode';
-      b.style.background='#f0f2f5';
-      b.style.color='#333';
-      b.style.borderColor='#ccc';
-    });
-  }
-}
+// ── Theme System ───────────────────────────────────────
+const THEME_CLASSES=['light-mode','theme-midnight','theme-forest','theme-plum','theme-ocean','theme-custom'];
+function clearThemeClasses(){document.body.classList.remove(...THEME_CLASSES);}
+function setTheme(theme){if(theme==='dark')theme='richly';clearThemeClasses();if(theme==='light')document.body.classList.add('light-mode');else if(theme!=='richly')document.body.classList.add('theme-'+theme);localStorage.setItem('richly_theme',theme);if(theme==='custom')applyCustomThemeVars();updateThemePicker();}
+function applyCustomThemeVars(){let x={accent:'#f0ff44',bg:'#111111'};try{x={...x,...JSON.parse(localStorage.getItem('richly_custom_theme')||'{}');}catch(e){}document.documentElement.style.setProperty('--custom-accent',x.accent);document.documentElement.style.setProperty('--custom-bg',x.bg);document.documentElement.style.setProperty('--custom-bg2',shadeHex(x.bg,1.07));document.documentElement.style.setProperty('--custom-bg3',shadeHex(x.bg,1.14));document.documentElement.style.setProperty('--custom-bg4',shadeHex(x.bg,1.22));document.documentElement.style.setProperty('--custom-card',shadeHex(x.bg,1.10));document.documentElement.style.setProperty('--custom-border',shadeHex(x.bg,1.18));document.documentElement.style.setProperty('--custom-border2',shadeHex(x.bg,1.28));}
+function shadeHex(hex,f){const n=parseInt(hex.slice(1),16),r=Math.min(255,Math.round(((n>>16)&255)*f)),g=Math.min(255,Math.round(((n>>8)&255)*f)),b=Math.min(255,Math.round((n&255)*f));return '#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('');}
+function updateCustomTheme(){const accent=document.getElementById('custom-accent').value,bg=document.getElementById('custom-bg').value;localStorage.setItem('richly_custom_theme',JSON.stringify({accent,bg}));setTheme('custom');}
+function updateThemePicker(){const t=localStorage.getItem('richly_theme')||'richly';document.querySelectorAll('.theme-swatch').forEach(b=>b.classList.toggle('active',b.dataset.theme===t));try{const x=JSON.parse(localStorage.getItem('richly_custom_theme')||'{}');if(x.accent)document.getElementById('custom-accent').value=x.accent;if(x.bg)document.getElementById('custom-bg').value=x.bg;}catch(e){}}
+function toggleTheme(){setTheme((localStorage.getItem('richly_theme')||'richly')==='light'?'richly':'light');}
+function applyTheme(){let t=localStorage.getItem('richly_theme')||'richly';if(t==='dark')t='richly';setTheme(t);}
 
 // ── Privacy Mode ───────────────────────────────────────
 function togglePrivacy(btn){
