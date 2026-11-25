@@ -5066,13 +5066,12 @@ function importTxCSVConfirm(){
 
   const now=new Date().toISOString();
   const existingExact=new Set(state.transactions.map(txFingerprint));
-  const existingWeak=new Set(state.transactions.map(txWeakFingerprint));
   let added=0,skippedAtConfirm=0;
 
   selected.forEach(r=>{
     const candidate={...r,account};
     const exact=txFingerprint(candidate),weak=txWeakFingerprint(candidate);
-    if(existingExact.has(exact)||existingWeak.has(weak)){skippedAtConfirm++;return;}
+    if(existingExact.has(exact)){skippedAtConfirm++;return;}
     const type=r.direction==='debit'?'expense':'income';
     state.transactions.push({
       id:uid(),description:r.description,amount:r.amount,type,
@@ -5082,7 +5081,7 @@ function importTxCSVConfirm(){
       account,imported:true,importSource:'bank_statement',
       importedAt:now,importFingerprint:exact
     });
-    existingExact.add(exact);existingWeak.add(weak);added++;
+    existingExact.add(exact);added++;
   });
 
   saveData();renderExpenses();renderDashboard();updateHeader();
