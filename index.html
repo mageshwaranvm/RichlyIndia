@@ -17,19 +17,10 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
 <script>
-// Kill old service workers, register new smart one
+// Register the offline-capable service worker without deleting its caches.
 if('serviceWorker' in navigator){
-  navigator.serviceWorker.getRegistrations().then(function(r){
-    r.forEach(function(x){x.unregister();});
-  });
-  if(window.caches){
-    caches.keys().then(function(k){k.forEach(function(x){caches.delete(x);});});
-  }
-  // Register new SW after old ones cleared
   window.addEventListener('load',function(){
-    setTimeout(function(){
-      navigator.serviceWorker.register('sw.js').catch(function(){});
-    },2000);
+    navigator.serviceWorker.register('./sw.js').catch(function(err){console.warn('Offline support unavailable',err);});
   });
 }
 </script>
