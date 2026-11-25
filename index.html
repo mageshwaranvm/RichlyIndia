@@ -4676,27 +4676,46 @@ function importCSVConfirm(){
     const normalizedName=name.toLowerCase().replace(/\s+/g,' ');
     const normalizedTicker=ticker.toUpperCase();
     const sourceKey=`ZERODHA:${type}:${normalizedTicker}`;
-    // Match a previous Zerodha import by its stable symbol/name first, then
-    // match a manually-entered holding by name. Never remove holdings absent
-    // from a statement: a partial CSV must not accidentally liquidate data.
+    // Match a previous Zerodha import by stable source key/symbol, then by name.
+    // A partial statement must never delete holdings that are absent from the file.
     const existing=state.investments.find(inv=>{
       if(inv.sourceKey===sourceKey)return true;
       const invTicker=String(inv.ticker||'').trim().toUpperCase();
       if(inv.broker==='Zerodha'&&inv.type===type&&invTicker===normalizedTicker)return true;
       return String(inv.name||'').trim().toLowerCase().replace(/\s+/g,' ')===normalizedName;
     });
-    const values={
-      name,type,invested:Number(r.invested)||0,value:Number(r.value)||0,
-      qty:Number(r.qty)||0,shares:Number(r.qty)||0,
-      ticker,price:Number(r.ltp)||0,avgCost:Number(r.avgCost)||0,
-      ltp:Number(r.ltp)||0,broker:r.broker||'CSV',
-      importSource:r.importSource||'csv',sourceKey,lastImportedAt:importedAt
+    const importedValues={
+      invested:Number(r.invested)||0,
+      value:Number(r.value)||0,
+      qty:Number(r.qty)||0,
+      shares:Number(r.qty)||0
     };
     if(existing){
-      Object.assign(existing,values);
+      // Preserve manually maintained metadata/name/type and update only live
+      // Zerodha values plus provenance. This avoids overwriting unrelated fields.
+      const previousValue=Number(existing.value)||0;
+      Object.assign(existing,importedValues);
+      existing.lastImportedAt=importedAt;
+      existing.updateSource='zerodha';
+      existing.updateHistory=Array.isArray(existing.updateHistory)?existing.updateHistory:[];
+      existing.updateHistory.unshift({
+        at:importedAt,source:'zerodha',
+        previousValue,newValue:importedValues.value
+      });
+      existing.updateHistory=existing.updateHistory.slice(0,10);
+      if(!existing.sourceKey)existing.sourceKey=sourceKey;
+      if(!existing.broker)existing.broker=r.broker||'Zerodha';
       updated++;
     }else{
-      state.investments.push({id:uid(),...values});
+      state.investments.push({
+        id:uid(),name,type,invested:importedValues.invested,value:importedValues.value,
+        qty:importedValues.qty,shares:importedValues.shares,
+        ticker,price:Number(r.ltp)||0,avgCost:Number(r.avgCost)||0,
+        ltp:Number(r.ltp)||0,broker:r.broker||'Zerodha',
+        importSource:r.importSource||'zerodha_csv',sourceKey,lastImportedAt:importedAt,
+        updateSource:'zerodha',
+        updateHistory:[{at:importedAt,source:'zerodha',previousValue:null,newValue:importedValues.value}]
+      });
       added++;
     }
   });
@@ -4704,7 +4723,8 @@ function importCSVConfirm(){
   clearCSVPreview();
   const fi=document.getElementById('csv-file-input');
   if(fi)fi.value='';
-  showToastMsg(`✅ Imported ${added} new holding${added!==1?'s':''}${updated>0?` · ${updated} updated`:''}. Existing holdings not in this file were kept.`);
+  const zerodhaCount=state.investments.filter(x=>x.updateSource==='zerodha'&&x.lastImportedAt).length;
+  showToastMsg(`✅ Zerodha refresh complete · ${added} new · ${updated} updated · ${zerodhaCount} tracked Zerodha holding${zerodhaCount!==1?'s':''}. Holdings missing from this file were kept.`);
 }
 
 function clearCSVPreview(){
@@ -6594,6 +6614,11 @@ function renderInvestments(){
   const totalInvested=state.investments.reduce((s,i)=>s+(i.invested||i.value),0);
   const totalPL=total-totalInvested;
   const totalPLPct=totalInvested>0?((totalPL/totalInvested)*100).toFixed(2):0;
+  const latestImported=state.investments.reduce((latest,i)=>{
+    const t=i.lastImportedAt?new Date(i.lastImportedAt).getTime():0;
+    return t>latest? t:latest;
+  },0);
+  const latestImportedLabel=latestImported?new Date(latestImported).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'No Zerodha refresh yet';
   const byType=Object.keys(INV_COLORS).reduce((a,t)=>({...a,[t]:state.investments.filter(i=>i.type===t).reduce((s,i)=>s+i.value,0)}),{});
   const slices=Object.entries(byType).filter(([,v])=>v>0).map(([t,v])=>({value:v,color:INV_COLORS[t]}));
 
@@ -6608,7 +6633,8 @@ function renderInvestments(){
     ].map(k=>`<div class="kpi-card" style="border-top:3px solid ${k.color};text-align:center;margin-bottom:16px;">
       <div class="kpi-label">${k.label}</div>
       <div class="kpi-val" style="color:${k.color};font-size:16px;">${k.val}</div>
-    </div>`).join('');
+    </div>`).join('')+
+    `<div style="font-size:10px;color:var(--text2);text-align:center;margin:-6px 0 14px;">Last Zerodha refresh: ${latestImportedLabel}</div>`;
   } else if(sumEl){sumEl.innerHTML='';}
 
   // Holdings table
