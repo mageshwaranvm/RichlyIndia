@@ -7743,7 +7743,7 @@ body.money-hidden .money-sensitive{filter:blur(7px);user-select:none;}
 <script>
 // ── Complete JSON backup and safe restore ─────────────────────────────
 function exportRichlyBackup(){
-  const payload={format:"richly-india-backup",version:1,exportedAt:new Date().toISOString(),data:JSON.parse(JSON.stringify(state)),extras:richlyExtras};
+  const payload={format:"richly-india-backup",version:1,exportedAt:new Date().toISOString(),data:JSON.parse(JSON.stringify(state)),extras:richlyExtras,settings:{theme:localStorage.getItem('richly_theme'),customTheme:localStorage.getItem('richly_custom_theme'),displayName:localStorage.getItem('richly_display_name')}};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
   const url=URL.createObjectURL(blob),a=document.createElement('a');
   a.href=url;a.download='richly-backup-'+today()+'.json';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
@@ -7768,6 +7768,9 @@ async function restoreRichlyBackup(file){
       for(const k of objectKeys)if(incoming[k]&&typeof incoming[k]==='object')state[k]={...(state[k]||{}),...incoming[k]};
     }
     if(parsed.extras)richlyExtras={...richlyExtras,...parsed.extras};
+    if(parsed.settings?.theme)setTheme(parsed.settings.theme);
+    if(parsed.settings?.customTheme)localStorage.setItem('richly_custom_theme',parsed.settings.customTheme);
+    if(parsed.settings?.displayName)localStorage.setItem('richly_display_name',parsed.settings.displayName);
     persistRichlyExtras();saveData();initApp();renderPlanningHub();
     const el=document.getElementById('backup-restore-status');if(el)el.textContent='Restore completed. Check your records and balances.';
     alert('Backup restored successfully.');
@@ -7939,8 +7942,9 @@ function renderPlanningHub(){
 
 // ── Investment quality: dated valuation, sources, flows, gains & benchmark ──
 function invXirr(flows){
-  if(flows.length<2)return null;
-  const t0=new Date(flows[0].date).getTime();if(!Number.isFinite(t0))return null;
+  flows=[...flows].sort((a,b)=>new Date(a.date)-new Date(b.date));
+  if(flows.length<2||!flows.some(f=>Number(f.amount)<0)||!flows.some(f=>Number(f.amount)>0))return null;
+  const t0=new Date(flows[0].date).getTime();if(!Number.isFinite(t0)||flows.some(f=>!Number.isFinite(new Date(f.date).getTime())))return null;
   const npv=r=>flows.reduce((s,f)=>s+f.amount/Math.pow(1+r,(new Date(f.date).getTime()-t0)/(365.25*86400000)),0);
   let lo=-0.9999,hi=10;
   for(let i=0;i<120;i++){const mid=(lo+hi)/2,v=npv(mid);if(!Number.isFinite(v))return null;if(v>0)lo=mid;else hi=mid;}
