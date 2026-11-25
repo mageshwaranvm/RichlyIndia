@@ -8070,5 +8070,37 @@ setMoneyVisibility=function(show){
   if(!show)richlyMarkMoney(document.getElementById('app'));
 };
 </script>
+
+<script>
+// Explicit resolution for cross-device sync conflicts; never silently overwrite.
+async function resolveRichlySyncConflict(choice){
+  if(!supabase||!currentUser)return alert('Sign in with an internet connection to resolve this sync conflict.');
+  const key='richly_last_sync_'+currentUser.id;
+  if(choice==='cloud'){
+    localStorage.removeItem('richly_sync_conflict');localStorage.removeItem('richly_sync_pending');
+    await loadFromSupabase();showSyncStatus('Loaded the newer cloud copy');
+    return;
+  }
+  if(choice==='device'){
+    const remote=await supabase.from('richly_data').select('updated_at').eq('user_id',currentUser.id).maybeSingle();
+    if(remote.error)return alert('Could not check the cloud version: '+remote.error.message);
+    if(!confirm('Replace the newer cloud copy with the data currently on this device? Export a backup first if unsure.'))return;
+    if(remote.data?.updated_at)localStorage.setItem(key,remote.data.updated_at);
+    localStorage.removeItem('richly_sync_conflict');localStorage.setItem('richly_sync_pending','1');
+    saveData();
+  }
+}
+const _richlyShowSyncStatus=showSyncStatus;
+showSyncStatus=function(msg){
+  _richlyShowSyncStatus(msg);
+  const el=document.getElementById('sync-status');if(!el)return;
+  let controls=document.getElementById('richly-sync-conflict-controls');
+  if(msg.includes('Cloud changed elsewhere')){
+    if(!controls){controls=document.createElement('span');controls.id='richly-sync-conflict-controls';controls.style.cssText='display:inline-flex;gap:5px;margin-left:8px;flex-wrap:wrap;';el.insertAdjacentElement('afterend',controls);}
+    controls.innerHTML='<button type="button" class="filter-btn" onclick="resolveRichlySyncConflict(\'cloud\')">Use cloud copy</button><button type="button" class="filter-btn" onclick="resolveRichlySyncConflict(\'device\')">Keep this device</button>';
+    controls.style.display='inline-flex';
+  }else if(controls){controls.style.display='none';}
+};
+</script>
 </body>
 </html>
