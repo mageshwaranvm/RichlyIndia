@@ -531,19 +531,24 @@ body.privacy-mode .result-val{
   <div id="body">
     <div id="overlay" onclick="closeMenu()"></div>
     <div id="sidebar">
+      <div class="nav-group-label">MY MONEY</div>
       <button class="nav-btn active" onclick="goTo('dashboard',this)"><span class="nav-icon">⬡</span>Dashboard</button>
-      <button class="nav-btn" onclick="goTo('expenses',this)"><span class="nav-icon">↕</span>Expenses</button>
-      <button class="nav-btn" onclick="goTo('goals',this)"><span class="nav-icon">◈</span>Goals</button>
-      <button class="nav-btn" onclick="goTo('trends',this)"><span class="nav-icon">↗</span>Trends</button>
-      <button class="nav-btn" onclick="goTo('reports',this)"><span class="nav-icon">📄</span>Reports</button>
+      <button class="nav-btn" onclick="goTo('expenses',this)"><span class="nav-icon">↕</span>Transactions</button>
+      <button class="nav-btn" onclick="goTo('budget',this)"><span class="nav-icon">▤</span>Budgets</button>
+      <div class="nav-group-label">MY WEALTH</div>
       <button class="nav-btn" onclick="goTo('investments',this)"><span class="nav-icon">◆</span>Investments</button>
       <button class="nav-btn" onclick="goTo('assets',this)"><span class="nav-icon">◉</span>Assets & Debts</button>
       <button class="nav-btn" onclick="goTo('networth',this)"><span class="nav-icon">◐</span>Net Worth</button>
+      <div class="nav-group-label">MY PLANS</div>
+      <button class="nav-btn" onclick="goTo('goals',this)"><span class="nav-icon">◈</span>Goals</button>
+      <button class="nav-btn" onclick="goTo('trends',this)"><span class="nav-icon">↗</span>Trends</button>
+      <button class="nav-btn" onclick="goTo('reports',this)"><span class="nav-icon">📄</span>Reports</button>
       <button class="nav-btn" onclick="goTo('calculators',this)"><span class="nav-icon">⊞</span>Calculators</button>
+      <button class="nav-btn" onclick="goTo('planning',this)"><span class="nav-icon">🗓</span>Planning Hub</button>
+      <div class="nav-group-label">MARKETS & SETTINGS</div>
       <button class="nav-btn" onclick="goTo('news',this)"><span class="nav-icon">📰</span>Market News</button>
-      <button class="nav-btn" onclick="goTo('checklist',this)"><span class="nav-icon">✅</span>Stock Checklist</button>
       <button class="nav-btn" onclick="goTo('profile',this)"><span class="nav-icon">👤</span>Profile</button>
-    </div>
+    </div>div>
 
     <div id="content">
 
@@ -1521,404 +1526,50 @@ body.privacy-mode .result-val{
       </div>
 
       <!-- STOCK CHECKLIST -->
-      <div id="page-checklist" class="page">
-        <div class="section-title">✅ Stock Checklist</div>
-        <div class="section-sub">4-stage fundamental analysis before buying</div>
-
-        <div class="filter-bar">
-          <button class="filter-btn active" id="cl-tab-new" onclick="setChecklistTab('new',this)">📋 New Check</button>
-          <button class="filter-btn" id="cl-tab-history" onclick="setChecklistTab('history',this)">🕘 History</button>
+      
+      <!-- PLANNING HUB: recurring, reminders, emergency fund, reviews, household and milestones -->
+      <div id="page-planning" class="page">
+        <div class="section-title">Planning Hub</div>
+        <div class="section-sub">Build better financial habits and stay ahead of upcoming commitments</div>
+        <div id="planning-reminder-alerts"></div>
+        <div class="card" style="border-top:3px solid #3dffa0;">
+          <div class="card-title">Emergency Fund Planner</div>
+          <div id="emergency-fund-content"></div>
         </div>
-
-        <div id="cl-view-new">
-
-          <!-- Stock name + auto-fill -->
-          <div class="card" id="cl-stock-header">
-            <div class="card-title">Stock to Analyse</div>
-            <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
-              <div class="form-group" style="flex:1;min-width:140px;">
-                <label class="form-label">Stock Symbol / Name</label>
-                <input class="form-input" id="cl-stock-name" placeholder="e.g. HDFCBANK, CIPLA, TCS" style="font-size:16px;font-weight:700;text-transform:uppercase;"/>
-              </div>
-              <div class="form-group" style="min-width:110px;">
-                <label class="form-label">Sector</label>
-                <select class="form-input" id="cl-sector">
-                  <option value="general">General</option>
-                  <option value="bank">Bank / NBFC</option>
-                  <option value="pharma">Pharma</option>
-                  <option value="it">IT</option>
-                  <option value="fmcg">FMCG</option>
-                  <option value="infra">Infra</option>
-                  <option value="energy">Energy</option>
-                  <option value="auto">Auto</option>
-                </select>
-              </div>
-            </div>
-            <!-- Stage progress dots -->
-            <div style="display:flex;align-items:center;gap:6px;margin-top:16px;flex-wrap:wrap;">
-              <span style="font-size:11px;color:var(--text2);font-weight:600;margin-right:4px;">STAGE</span>
-              <div id="cl-dot-1" style="display:flex;align-items:center;gap:4px;">
-                <div style="width:28px;height:28px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#000;">1</div>
-                <div style="width:20px;height:2px;background:var(--bg3);border-radius:2px;"></div>
-              </div>
-              <div id="cl-dot-2" style="display:flex;align-items:center;gap:4px;">
-                <div style="width:28px;height:28px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--text3);">2</div>
-                <div style="width:20px;height:2px;background:var(--bg3);border-radius:2px;"></div>
-              </div>
-              <div id="cl-dot-3" style="display:flex;align-items:center;gap:4px;">
-                <div style="width:28px;height:28px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--text3);">3</div>
-                <div style="width:20px;height:2px;background:var(--bg3);border-radius:2px;"></div>
-              </div>
-              <div id="cl-dot-4" style="display:flex;align-items:center;gap:4px;">
-                <div style="width:28px;height:28px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--text3);">4</div>
-              </div>
-              <span id="cl-stage-label" style="font-size:11px;color:var(--gold);font-weight:700;margin-left:4px;">Gate Check</span>
-            </div>
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+            <div class="card-title" style="margin:0;">Recurring Transactions</div>
+            <button class="filter-btn active" onclick="addRecurringItem()">+ Add recurring item</button>
           </div>
-
-          <!-- STAGE 1 — Gate Check -->
-          <div id="cl-stage-1" class="card" style="border-top:3px solid var(--gold);">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-              <div class="card-title" style="color:var(--gold);margin-bottom:0;">Stage 1 — Gate Check</div>
-              <span style="font-size:10px;color:var(--text2);background:var(--bg3);padding:3px 8px;border-radius:6px;">25 pts</span>
-            </div>
-            <div style="font-size:12px;color:var(--text2);margin-bottom:18px;">Basic filters — if any fail hard, stock is rejected at gate. Each criterion = 5 points.</div>
-
-            <!-- 1.1 Market Cap -->
-            <div class="cl-criterion" id="cl-1-1">
-              <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
-                <div style="flex:1;">
-                  <div style="font-size:13px;font-weight:700;">1. Market Cap <span id="cl-mcap-auto" style="font-size:10px;color:#5bb8f5;"></span></div>
-                  <div style="font-size:11px;color:var(--text2);">Must be > ₹1,000 Cr to be investable</div>
-                </div>
-                <div id="cl-dot-1-1" class="cl-status-dot cl-dot-pending"></div>
-              </div>
-              <div style="display:flex;gap:8px;align-items:center;">
-                <div class="form-group" style="flex:1;">
-                  <label class="form-label">Market Cap (₹ Crores)</label>
-                  <input class="form-input" type="number" id="cl-mcap" placeholder="e.g. 50000" oninput="evalStage1()"/>
-                </div>
-                <div style="min-width:80px;text-align:center;">
-                  <div id="cl-mcap-status" style="font-size:11px;font-weight:700;padding:6px 10px;border-radius:8px;background:var(--bg3);color:var(--text2);">—</div>
-                </div>
-              </div>
-            </div>
-
-            <div style="height:1px;background:var(--border);margin:14px 0;"></div>
-
-            <!-- 1.2 Promoter Holding -->
-            <div class="cl-criterion" id="cl-1-2">
-              <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
-                <div style="flex:1;">
-                  <div style="font-size:13px;font-weight:700;">2. Promoter Holding <span style="font-size:10px;color:var(--text3);font-weight:400;">(manual entry)</span></div>
-                  <div style="font-size:11px;color:var(--text2);">Should be ≥ 50%, or institutionally managed (MNC/PSU/MF-backed)</div>
-                </div>
-                <div id="cl-dot-1-2" class="cl-status-dot cl-dot-pending"></div>
-              </div>
-              <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;">
-                <div class="form-group" style="flex:1;min-width:120px;">
-                  <label class="form-label">Promoter Holding %</label>
-                  <input class="form-input" type="number" id="cl-promoter" placeholder="e.g. 52.3" min="0" max="100" oninput="evalStage1()"/>
-                </div>
-                <div class="form-group" style="flex:1;min-width:160px;">
-                  <label class="form-label">Exception</label>
-                  <select class="form-input" id="cl-promoter-exc" onchange="evalStage1()">
-                    <option value="none">None</option>
-                    <option value="mnc">MNC (foreign promoter)</option>
-                    <option value="psu">PSU (govt. managed)</option>
-                    <option value="mf">MF / Institution managed</option>
-                  </select>
-                </div>
-              </div>
-              <div id="cl-promoter-status" style="font-size:11px;margin-top:6px;"></div>
-            </div>
-
-            <div style="height:1px;background:var(--border);margin:14px 0;"></div>
-
-            <!-- 1.3 Promoter Pledge -->
-            <div class="cl-criterion" id="cl-1-3">
-              <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
-                <div style="flex:1;">
-                  <div style="font-size:13px;font-weight:700;">3. Promoter Pledge <span style="font-size:10px;color:var(--text3);font-weight:400;">(manual entry)</span></div>
-                  <div style="font-size:11px;color:var(--text2);">Must be < 15% — high pledge signals financial stress</div>
-                </div>
-                <div id="cl-dot-1-3" class="cl-status-dot cl-dot-pending"></div>
-              </div>
-              <div style="display:flex;gap:8px;align-items:center;">
-                <div class="form-group" style="flex:1;">
-                  <label class="form-label">Pledged Shares %</label>
-                  <input class="form-input" type="number" id="cl-pledge" placeholder="e.g. 5.2" min="0" max="100" oninput="evalStage1()"/>
-                </div>
-                <div style="min-width:80px;text-align:center;">
-                  <div id="cl-pledge-status" style="font-size:11px;font-weight:700;padding:6px 10px;border-radius:8px;background:var(--bg3);color:var(--text2);">—</div>
-                </div>
-              </div>
-            </div>
-
-            <div style="height:1px;background:var(--border);margin:14px 0;"></div>
-
-            <!-- 1.4 Debt to Equity -->
-            <div class="cl-criterion" id="cl-1-4">
-              <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
-                <div style="flex:1;">
-                  <div style="font-size:13px;font-weight:700;">4. Debt to Equity <span id="cl-de-auto" style="font-size:10px;color:#5bb8f5;"></span></div>
-                  <div style="font-size:11px;color:var(--text2);">Should be < 1.5x — not applicable for Banks / NBFCs</div>
-                </div>
-                <div id="cl-dot-1-4" class="cl-status-dot cl-dot-pending"></div>
-              </div>
-              <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;">
-                <div class="form-group" style="flex:1;min-width:120px;">
-                  <label class="form-label">D/E Ratio</label>
-                  <input class="form-input" type="number" id="cl-de" placeholder="e.g. 0.8" step="0.1" oninput="evalStage1()"/>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">N/A for Banks</label>
-                  <label style="display:flex;align-items:center;gap:6px;height:42px;cursor:pointer;">
-                    <input type="checkbox" id="cl-de-na" onchange="evalStage1()" style="width:18px;height:18px;accent-color:var(--gold);"/>
-                    <span style="font-size:12px;color:var(--text2);">Bank / NBFC</span>
-                  </label>
-                </div>
-              </div>
-              <div id="cl-de-status" style="font-size:11px;margin-top:6px;"></div>
-            </div>
-
-            <div style="height:1px;background:var(--border);margin:14px 0;"></div>
-
-            <!-- 1.5 Interest Coverage -->
-            <div class="cl-criterion" id="cl-1-5">
-              <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
-                <div style="flex:1;">
-                  <div style="font-size:13px;font-weight:700;">5. Interest Coverage Ratio <span id="cl-icr-auto" style="font-size:10px;color:#5bb8f5;"></span></div>
-                  <div style="font-size:11px;color:var(--text2);">Must be > 3x — ability to service debt from earnings</div>
-                </div>
-                <div id="cl-dot-1-5" class="cl-status-dot cl-dot-pending"></div>
-              </div>
-              <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;">
-                <div class="form-group" style="flex:1;min-width:120px;">
-                  <label class="form-label">ICR (times)</label>
-                  <input class="form-input" type="number" id="cl-icr" placeholder="e.g. 5.2" step="0.1" oninput="evalStage1()"/>
-                </div>
-                <div class="form-group">
-                  <label class="form-label">N/A for Banks</label>
-                  <label style="display:flex;align-items:center;gap:6px;height:42px;cursor:pointer;">
-                    <input type="checkbox" id="cl-icr-na" onchange="evalStage1()" style="width:18px;height:18px;accent-color:var(--gold);"/>
-                    <span style="font-size:12px;color:var(--text2);">Bank / NBFC</span>
-                  </label>
-                </div>
-              </div>
-              <div id="cl-icr-status" style="font-size:11px;margin-top:6px;"></div>
-            </div>
-
-            <div id="cl-stage1-result" style="display:none;margin-top:18px;"></div>
-
-            <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap;">
-              <button class="btn btn-accent" onclick="submitStage1()" style="flex:1;">Save Stage 1 & Continue →</button>
-            </div>
+          <div class="section-sub" style="margin:8px 0 12px;">Scheduled items are never posted automatically. Review each occurrence before adding it to your ledger.</div>
+          <div id="recurring-items-list"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Bills & EMI Reminders</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+            <input id="reminder-title" class="form-input" placeholder="Bill / EMI name" style="flex:2;min-width:130px;"/>
+            <input id="reminder-amount" class="form-input" type="number" min="0" placeholder="Amount ₹" style="flex:1;min-width:100px;"/>
+            <input id="reminder-date" class="form-input" type="date" style="flex:1;min-width:130px;"/>
+            <button class="filter-btn active" onclick="addBillReminder()">Add reminder</button>
           </div>
-
-          <div id="cl-stage-2" class="card" style="display:none;border-top:3px solid #5bb8f5;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-              <div class="card-title" style="color:#5bb8f5;margin-bottom:0;" id="cl-stage2-title">Stage 2 — Efficiency</div>
-              <span style="font-size:10px;color:var(--text2);background:var(--bg3);padding:3px 8px;border-radius:6px;">30 pts</span>
-            </div>
-            <div style="font-size:12px;color:var(--text2);margin-bottom:18px;" id="cl-stage2-sub">Profitability & efficiency metrics — weighted across 8 criteria.</div>
-
-            <!-- ── COMPANY METRICS (non-bank) ── -->
-            <div id="cl-stage2-company">
-
-              <div class="cl-criterion" id="cl-2-1">
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
-                  <div style="flex:1;"><div style="font-size:13px;font-weight:700;">1. 5-Year Average ROCE</div><div style="font-size:11px;color:var(--text2);">Good if > 15%, warn 10-15%, flag if < 10% · enter latest year + 5 years ago, app estimates the average</div></div>
-                  <div id="cl-dot-2-1" class="cl-status-dot cl-dot-pending"></div>
-                </div>
-                <div style="display:flex;gap:8px;align-items:center;">
-                  <input class="form-input" type="number" id="cl-roce-latest" placeholder="Latest year %" step="0.1" oninput="clSyncRocRoe()" style="flex:1;"/>
-                  <input class="form-input" type="number" id="cl-roce-5yago" placeholder="5 years ago %" step="0.1" oninput="clSyncRocRoe()" style="flex:1;"/>
-                  <div id="cl-roce5y-status" style="min-width:90px;text-align:center;font-size:11px;font-weight:700;padding:6px 10px;border-radius:8px;background:var(--bg3);color:var(--text2);">—</div>
-                </div>
-              </div>
-              <div style="height:1px;background:var(--border);margin:14px 0;"></div>
-
-              <div class="cl-criterion" id="cl-2-2">
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
-                  <div style="flex:1;"><div style="font-size:13px;font-weight:700;">2. 5-Year Average ROE</div><div style="font-size:11px;color:var(--text2);">Flag if < 12% · enter latest year + 5 years ago, app estimates the average</div></div>
-                  <div id="cl-dot-2-2" class="cl-status-dot cl-dot-pending"></div>
-                </div>
-                <div style="display:flex;gap:8px;align-items:center;">
-                  <input class="form-input" type="number" id="cl-roe-latest" placeholder="Latest year %" step="0.1" oninput="clSyncRocRoe()" style="flex:1;"/>
-                  <input class="form-input" type="number" id="cl-roe-5yago" placeholder="5 years ago %" step="0.1" oninput="clSyncRocRoe()" style="flex:1;"/>
-                  <div id="cl-roe5y-status" style="min-width:90px;text-align:center;font-size:11px;font-weight:700;padding:6px 10px;border-radius:8px;background:var(--bg3);color:var(--text2);">—</div>
-                </div>
-              </div>
-              <div style="height:1px;background:var(--border);margin:14px 0;"></div>
-
-              <div class="cl-criterion" id="cl-2-3">
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
-                  <div style="flex:1;"><div style="font-size:13px;font-weight:700;">3. Current Year ROCE vs 5Y Avg</div><div style="font-size:11px;color:var(--text2);">Trend check — auto-derived from criterion 1, no extra entry needed</div></div>
-                  <div id="cl-dot-2-3" class="cl-status-dot cl-dot-pending"></div>
-                </div>
-                <div id="cl-roce-trend" style="text-align:center;font-size:12px;font-weight:700;padding:8px 10px;border-radius:8px;background:var(--bg3);color:var(--text2);">—</div>
-              </div>
-              <div style="height:1px;background:var(--border);margin:14px 0;"></div>
-
-              <div class="cl-criterion" id="cl-2-4">
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
-                  <div style="flex:1;"><div style="font-size:13px;font-weight:700;">4. Current Year ROE vs 5Y Avg</div><div style="font-size:11px;color:var(--text2);">Trend check — auto-derived from criterion 2, no extra entry needed</div></div>
-                  <div id="cl-dot-2-4" class="cl-status-dot cl-dot-pending"></div>
-                </div>
-                <div id="cl-roe-trend" style="text-align:center;font-size:12px;font-weight:700;padding:8px 10px;border-radius:8px;background:var(--bg3);color:var(--text2);">—</div>
-              </div>
-              <div style="height:1px;background:var(--border);margin:14px 0;"></div>
-
-              <!-- Hidden fields kept for the scoring engine — populated automatically by clSyncRocRoe() -->
-              <input type="hidden" id="cl-roce5y"/>
-              <input type="hidden" id="cl-roe5y"/>
-              <input type="hidden" id="cl-roce-cur"/>
-              <input type="hidden" id="cl-roe-cur"/>
-
-              <div style="background:var(--bg3);border-radius:10px;padding:12px 14px;margin-bottom:14px;">
-                <div style="font-size:11px;font-weight:700;color:var(--gold);margin-bottom:8px;">💰 Current-year financials (₹ crore) — copy straight from Tickertape's Financials table</div>
-                <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
-                  <label style="font-size:11px;color:var(--text2);min-width:80px;">Total Revenue</label>
-                  <input class="form-input" type="number" id="cl-revenue" placeholder="e.g. 594574" oninput="clSyncMargins()" style="flex:1;font-size:12px;padding:6px 8px;"/>
-                </div>
-              </div>
-
-              <div class="cl-criterion" id="cl-2-5">
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
-                  <div style="flex:1;"><div style="font-size:13px;font-weight:700;">5. EBITDA Margin</div><div style="font-size:11px;color:var(--text2);">Flag if < 18% · enter EBITDA, app divides by Revenue above</div></div>
-                  <div id="cl-dot-2-5" class="cl-status-dot cl-dot-pending"></div>
-                </div>
-                <div style="display:flex;gap:8px;align-items:center;">
-                  <input class="form-input" type="number" id="cl-ebitda-abs" placeholder="EBITDA (₹ cr)" oninput="clSyncMargins()" style="flex:1;"/>
-                  <div id="cl-ebitda-status" style="min-width:90px;text-align:center;font-size:11px;font-weight:700;padding:6px 10px;border-radius:8px;background:var(--bg3);color:var(--text2);">—</div>
-                </div>
-              </div>
-              <div style="height:1px;background:var(--border);margin:14px 0;"></div>
-
-              <div class="cl-criterion" id="cl-2-6">
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
-                  <div style="flex:1;"><div style="font-size:13px;font-weight:700;">6. Net Profit Margin</div><div style="font-size:11px;color:var(--text2);">Flag if < 10% · enter Net Income, app divides by Revenue above</div></div>
-                  <div id="cl-dot-2-6" class="cl-status-dot cl-dot-pending"></div>
-                </div>
-                <div style="display:flex;gap:8px;align-items:center;">
-                  <input class="form-input" type="number" id="cl-ni-abs" placeholder="Net Income (₹ cr)" oninput="clSyncMargins()" style="flex:1;"/>
-                  <div id="cl-npm-status" style="min-width:90px;text-align:center;font-size:11px;font-weight:700;padding:6px 10px;border-radius:8px;background:var(--bg3);color:var(--text2);">—</div>
-                </div>
-              </div>
-              <div style="height:1px;background:var(--border);margin:14px 0;"></div>
-
-              <div class="cl-criterion" id="cl-2-7">
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
-                  <div style="flex:1;"><div style="font-size:13px;font-weight:700;">7. Cash Flow Margin</div><div style="font-size:11px;color:var(--text2);">CFO ÷ Revenue — flag if < 10% · CFO = Free Cash Flow + Capex, both from Tickertape's Cash Flow table</div></div>
-                  <div id="cl-dot-2-7" class="cl-status-dot cl-dot-pending"></div>
-                </div>
-                <div style="display:flex;gap:8px;align-items:center;">
-                  <input class="form-input" type="number" id="cl-fcf-abs" placeholder="Free Cash Flow (₹ cr)" oninput="clSyncMargins()" style="flex:1;"/>
-                  <input class="form-input" type="number" id="cl-capex-abs" placeholder="Capex (₹ cr)" oninput="clSyncMargins()" style="flex:1;"/>
-                </div>
-                <div id="cl-cfm-status" style="margin-top:8px;text-align:center;font-size:11px;font-weight:700;padding:6px 10px;border-radius:8px;background:var(--bg3);color:var(--text2);">—</div>
-              </div>
-              <div style="height:1px;background:var(--border);margin:14px 0;"></div>
-
-              <div class="cl-criterion" id="cl-2-8">
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
-                  <div style="flex:1;"><div style="font-size:13px;font-weight:700;">8. Free Cash Flow</div><div style="font-size:11px;color:var(--text2);">Should be consistently positive — auto-derived from the FCF figure entered above</div></div>
-                  <div id="cl-dot-2-8" class="cl-status-dot cl-dot-pending"></div>
-                </div>
-                <div id="cl-fcf-status" style="text-align:center;font-size:12px;font-weight:700;padding:8px 10px;border-radius:8px;background:var(--bg3);color:var(--text2);">—</div>
-                <input type="hidden" id="cl-fcf"/>
-              </div>
-            </div>
-
-            <!-- ── BANK / NBFC METRICS ── -->
-            <div id="cl-stage2-bank" style="display:none;">
-
-              <div class="cl-criterion" id="cl-2b-1">
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
-                  <div style="flex:1;"><div style="font-size:13px;font-weight:700;">1. Net Interest Margin (NIM)</div><div style="font-size:11px;color:var(--text2);">Good if > 3.5%, flag if < 2.5%</div></div>
-                  <div id="cl-dot-2b-1" class="cl-status-dot cl-dot-pending"></div>
-                </div>
-                <div style="display:flex;gap:8px;align-items:center;">
-                  <input class="form-input" type="number" id="cl-nim" placeholder="e.g. 3.8" step="0.1" oninput="evalStage2()" style="flex:1;"/>
-                  <div id="cl-nim-status" style="min-width:90px;text-align:center;font-size:11px;font-weight:700;padding:6px 10px;border-radius:8px;background:var(--bg3);color:var(--text2);">—</div>
-                </div>
-              </div>
-              <div style="height:1px;background:var(--border);margin:14px 0;"></div>
-
-              <div class="cl-criterion" id="cl-2b-2">
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
-                  <div style="flex:1;"><div style="font-size:13px;font-weight:700;">2. Gross NPA %</div><div style="font-size:11px;color:var(--text2);">Good if < 2%, flag if > 5%</div></div>
-                  <div id="cl-dot-2b-2" class="cl-status-dot cl-dot-pending"></div>
-                </div>
-                <div style="display:flex;gap:8px;align-items:center;">
-                  <input class="form-input" type="number" id="cl-gnpa" placeholder="e.g. 1.8" step="0.1" oninput="evalStage2()" style="flex:1;"/>
-                  <div id="cl-gnpa-status" style="min-width:90px;text-align:center;font-size:11px;font-weight:700;padding:6px 10px;border-radius:8px;background:var(--bg3);color:var(--text2);">—</div>
-                </div>
-              </div>
-              <div style="height:1px;background:var(--border);margin:14px 0;"></div>
-
-              <div class="cl-criterion" id="cl-2b-3">
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
-                  <div style="flex:1;"><div style="font-size:13px;font-weight:700;">3. Net NPA %</div><div style="font-size:11px;color:var(--text2);">Good if < 1%, flag if > 2%</div></div>
-                  <div id="cl-dot-2b-3" class="cl-status-dot cl-dot-pending"></div>
-                </div>
-                <div style="display:flex;gap:8px;align-items:center;">
-                  <input class="form-input" type="number" id="cl-nnpa" placeholder="e.g. 0.5" step="0.1" oninput="evalStage2()" style="flex:1;"/>
-                  <div id="cl-nnpa-status" style="min-width:90px;text-align:center;font-size:11px;font-weight:700;padding:6px 10px;border-radius:8px;background:var(--bg3);color:var(--text2);">—</div>
-                </div>
-              </div>
-              <div style="height:1px;background:var(--border);margin:14px 0;"></div>
-
-              <div class="cl-criterion" id="cl-2b-4">
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
-                  <div style="flex:1;"><div style="font-size:13px;font-weight:700;">4. CASA Ratio</div><div style="font-size:11px;color:var(--text2);">Good if > 40% — cheaper cost of funds</div></div>
-                  <div id="cl-dot-2b-4" class="cl-status-dot cl-dot-pending"></div>
-                </div>
-                <div style="display:flex;gap:8px;align-items:center;">
-                  <input class="form-input" type="number" id="cl-casa" placeholder="e.g. 42" step="0.1" oninput="evalStage2()" style="flex:1;"/>
-                  <div id="cl-casa-status" style="min-width:90px;text-align:center;font-size:11px;font-weight:700;padding:6px 10px;border-radius:8px;background:var(--bg3);color:var(--text2);">—</div>
-                </div>
-              </div>
-              <div style="height:1px;background:var(--border);margin:14px 0;"></div>
-
-              <div class="cl-criterion" id="cl-2b-5">
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
-                  <div style="flex:1;"><div style="font-size:13px;font-weight:700;">5. Capital Adequacy Ratio (CAR)</div><div style="font-size:11px;color:var(--text2);">RBI minimum 11.5% — good if > 14%</div></div>
-                  <div id="cl-dot-2b-5" class="cl-status-dot cl-dot-pending"></div>
-                </div>
-                <div style="display:flex;gap:8px;align-items:center;">
-                  <input class="form-input" type="number" id="cl-car" placeholder="e.g. 15.5" step="0.1" oninput="evalStage2()" style="flex:1;"/>
-                  <div id="cl-car-status" style="min-width:90px;text-align:center;font-size:11px;font-weight:700;padding:6px 10px;border-radius:8px;background:var(--bg3);color:var(--text2);">—</div>
-                </div>
-              </div>
-            </div>
-
-            <div id="cl-stage2-result" style="display:none;margin-top:18px;"></div>
-            <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap;">
-              <button class="btn btn-accent" onclick="submitStage2()" style="flex:1;">Save Stage 2 & Continue →</button>
-            </div>
-          </div>
-
-          <div id="cl-stage-3" class="card" style="display:none;border-top:3px solid #3ecf8e;opacity:0.95;">
-            <div class="card-title" style="color:#3ecf8e;">Stage 3 — Growth</div>
-            <div style="color:var(--text2);font-size:13px;padding:20px 0;text-align:center;">Coming in next session 🔜</div>
-          </div>
-          <div id="cl-stage-4" class="card" style="display:none;border-top:3px solid #d946ef;opacity:0.95;">
-            <div class="card-title" style="color:#d946ef;">Stage 4 — Valuation</div>
-            <div style="color:var(--text2);font-size:13px;padding:20px 0;text-align:center;">Coming in next session 🔜</div>
-          </div>
-
-        </div><!-- end cl-view-new -->
-
-        <div id="cl-view-history" style="display:none;">
-          <div class="card" id="cl-history-list">
-            <div style="color:var(--text2);text-align:center;padding:32px;font-size:13px;">No checklist history yet.</div>
-          </div>
+          <div id="bill-reminders-list"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Monthly Financial Review</div>
+          <div id="monthly-review-content"></div>
+          <button class="filter-btn" onclick="renderMonthlyReview(true)">Refresh review</button>
+        </div>
+        <div class="card">
+          <div class="card-title">Financial Milestones</div>
+          <div id="milestones-content"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Family Finance Mode</div>
+          <div id="family-finance-content"></div>
         </div>
       </div>
 
-      <!-- PROFILE -->
+<!-- PROFILE -->
       <div id="page-profile" class="page">
         <div class="section-title">Profile</div>
         <div class="section-sub">Your account and app settings</div>
@@ -1974,7 +1625,18 @@ body.privacy-mode .result-val{
           </div>
           <div class="card" style="border-top:3px solid #3dffa0;">
             <div class="card-title" style="color:#3dffa0;">📊 My Stats</div>
-            <div id="profile-stats"></div>
+            
+            <div class="card" style="margin:14px 0;border-top:3px solid var(--gold);">
+              <div class="card-title">Data Backup & Restore</div>
+              <div style="font-size:12px;color:var(--text2);margin-bottom:12px;">Export a complete JSON backup of your Richly data. Restore it later on this device or another device.</div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <button class="filter-btn active" onclick="exportRichlyBackup()">⬇ Export full backup</button>
+                <button class="filter-btn" onclick="document.getElementById('richly-restore-file').click()">⬆ Restore backup</button>
+                <input id="richly-restore-file" type="file" accept=".json,application/json" style="display:none" onchange="restoreRichlyBackup(this.files[0]);this.value=''"/>
+              </div>
+              <div id="backup-restore-status" style="font-size:11px;color:var(--text2);margin-top:8px;"></div>
+            </div>
+<div id="profile-stats"></div>
             <div style="margin-top:16px;padding:14px;background:#f0ff4410;border:1px solid #f0ff4430;border-radius:10px;">
               <div style="font-size:11px;color:#f0ff44;font-weight:700;margin-bottom:4px;">ℹ️ ABOUT ₹RICHLY</div>
               <div style="font-size:11px;color:#888;line-height:1.7;">Version 2.0 · Built for India 🇮🇳<br>Cloud: Supabase · Free · No Ads<br>Your data is private and secure.</div>
@@ -2369,7 +2031,6 @@ function renderPage(p){
   }
   if(p==='networth')renderNetWorth();
   if(p==='profile')renderProfile();
-  if(p==='checklist')initChecklistPage();
   if(p==='news'){if(!newsLoadedOnce){loadMarketNews();newsLoadedOnce=true;}}
 }
 
@@ -8033,6 +7694,275 @@ window.addEventListener('load',()=>{
     }
   });
 });
+</script>
+
+<style>
+.nav-group-label{padding:15px 16px 5px;color:var(--text3);font-size:9px;font-weight:800;letter-spacing:1.5px;}
+#sidebar .nav-group-label:first-child{padding-top:10px;}
+@media(max-width:760px){
+  #sidebar .nav-group-label{padding-top:12px;}
+  #richly-mobile-nav{position:fixed;z-index:250;bottom:0;left:0;right:0;display:flex;justify-content:space-around;gap:2px;padding:7px 4px calc(7px + env(safe-area-inset-bottom));background:var(--card-bg);border-top:1px solid var(--border);box-shadow:0 -4px 18px #0002;}
+  #richly-mobile-nav button{background:none;border:0;color:var(--text2);font-size:10px;padding:5px 7px;display:flex;flex-direction:column;align-items:center;gap:2px;}
+  #content{padding-bottom:76px!important;}
+}
+@media(min-width:761px){#richly-mobile-nav{display:none!important;}}
+body.money-hidden #dash-nw-val,
+body.money-hidden #dash-assets-val,
+body.money-hidden #dash-liab-val,
+body.money-hidden #dash-cashflow,
+body.money-hidden #dash-allocation,
+body.money-hidden #dash-kpis,
+body.money-hidden #dash-money-split-content,
+body.money-hidden #dash-donut,
+body.money-hidden #dash-bars,
+body.money-hidden #dash-inv-content,
+body.money-hidden .kpi-val,
+body.money-hidden .inv-pl,
+body.money-hidden .ast-value,
+body.money-hidden .lib-value,
+body.money-hidden .money-sensitive{filter:blur(7px);user-select:none;}
+#dash-privacy-toggle{border:1px solid var(--border);background:var(--bg2);color:var(--text);border-radius:9px;padding:7px 10px;font-size:12px;cursor:pointer;}
+.planning-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);flex-wrap:wrap;}
+.planning-muted{color:var(--text2);font-size:12px;}
+</style>
+<script>
+// ── Complete JSON backup and safe restore ─────────────────────────────
+function exportRichlyBackup(){
+  const payload={format:"richly-india-backup",version:1,exportedAt:new Date().toISOString(),data:JSON.parse(JSON.stringify(state)),extras:richlyExtras};
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download='richly-backup-'+today()+'.json';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
+  const el=document.getElementById('backup-restore-status');if(el)el.textContent='Backup exported. Keep this file somewhere safe.';
+}
+async function restoreRichlyBackup(file){
+  if(!file)return;
+  try{
+    const parsed=JSON.parse(await file.text());
+    const incoming=parsed?.format==='richly-india-backup'?parsed.data:parsed;
+    if(!incoming||typeof incoming!=='object'||!Array.isArray(incoming.transactions)||!Array.isArray(incoming.investments))throw new Error('This does not look like a valid Richly backup.');
+    const mode=prompt('Type REPLACE to replace current data, or MERGE to combine records.','MERGE');
+    if(!mode)return;
+    const replace=mode.trim().toUpperCase()==='REPLACE';
+    if(!replace&&mode.trim().toUpperCase()!=='MERGE')return alert('Restore cancelled. Enter REPLACE or MERGE.');
+    const arrayKeys=['transactions','goals','investments','assets','liabilities','nwSnapshots','loansGiven'];
+    const objectKeys=['budgets','customCats','customAstCats','customLibCats','customInvTypes','allocTargets'];
+    if(replace){
+      for(const k of [...arrayKeys,...objectKeys])if(incoming[k]!==undefined)state[k]=Array.isArray(incoming[k])?[...incoming[k]]:{...incoming[k]};
+    }else{
+      for(const k of arrayKeys)if(Array.isArray(incoming[k])){const old=state[k]||[];const map=new Map(old.map(x=>[String(x.id||JSON.stringify(x)),x]));incoming[k].forEach(x=>map.set(String(x.id||JSON.stringify(x)),x));state[k]=[...map.values()];}
+      for(const k of objectKeys)if(incoming[k]&&typeof incoming[k]==='object')state[k]={...(state[k]||{}),...incoming[k]};
+    }
+    if(parsed.extras)richlyExtras={...richlyExtras,...parsed.extras};
+    persistRichlyExtras();saveData();initApp();renderPlanningHub();
+    const el=document.getElementById('backup-restore-status');if(el)el.textContent='Restore completed. Check your records and balances.';
+    alert('Backup restored successfully.');
+  }catch(e){alert('Restore failed: '+e.message);}
+}
+
+// ── Extra feature storage (device/account-local) ───────────────────────
+function extrasStorageKey(){return 'richly_extras_v1_'+(currentUser?.id||'offline');}
+let richlyExtras={recurring:[],reminders:[],emergency:{months:6},family:{enabled:false,members:[]},lastReview:null};
+try{richlyExtras={...richlyExtras,...JSON.parse(localStorage.getItem(extrasStorageKey())||'{}')};}catch(e){}
+function persistRichlyExtras(){try{localStorage.setItem(extrasStorageKey(),JSON.stringify(richlyExtras));}catch(e){alert('Could not save planning data on this device.');}}
+
+// ── Default-hidden money toggle on Dashboard ─────────────────────────
+function setMoneyVisibility(show){
+  document.body.classList.toggle('money-hidden',!show);
+  localStorage.setItem('richly_money_visible_session',show?'1':'0');
+  const b=document.getElementById('dash-privacy-toggle');if(b)b.textContent=show?'◉ Hide amounts':'◎ Show amounts';
+}
+function toggleMoneyVisibility(){setMoneyVisibility(document.body.classList.contains('money-hidden'));}
+function installMoneyToggle(){
+  const hero=document.getElementById('dash-nw-hero');if(!hero||document.getElementById('dash-privacy-toggle'))return;
+  const b=document.createElement('button');b.id='dash-privacy-toggle';b.type='button';b.onclick=toggleMoneyVisibility;
+  b.style.cssText='position:absolute;right:12px;bottom:12px;';
+  b.textContent='◎ Show amounts';
+  hero.style.position='relative';hero.appendChild(b);
+  document.body.classList.add('money-hidden'); // Always start hidden on app open.
+}
+
+// ── Universal quick add ───────────────────────────────────────────────
+function richlyQuickAdd(){
+  const choice=prompt('Quick add:\n1 Expense\n2 Income\n3 Asset\n4 Debt\n5 Investment\n6 Money lent\n7 Loan repayment\nEnter 1–7');
+  const map={'1':['expenses','tx-type','expense'],'2':['expenses','tx-type','income'],'3':['assets',null,null],'4':['assets',null,null],'5':['investments',null,null]};
+  if(map[choice]){
+    goTo(map[choice][0],document.querySelector('#sidebar .nav-btn[onclick*="\''+map[choice][0]+'\'"]'));
+    if(map[choice][1]){const x=document.getElementById(map[choice][1]);if(x)x.value=map[choice][2];}
+    if(choice==='3')setTimeout(()=>document.getElementById('ast-name')?.focus(),100);
+    if(choice==='4')setTimeout(()=>document.getElementById('lib-name')?.focus(),100);
+    if(choice==='5')setTimeout(()=>document.getElementById('inv-name')?.focus(),100);
+    if(choice==='1'||choice==='2')setTimeout(()=>document.getElementById('tx-desc')?.focus(),100);
+  }else if(choice==='6')goTo('assets',null);
+  else if(choice==='7')goTo('expenses',null);
+}
+function installQuickAdd(){
+  if(document.getElementById('richly-quick-add'))return;
+  const b=document.createElement('button');b.id='richly-quick-add';b.textContent='+ Quick add';b.onclick=richlyQuickAdd;
+  b.style.cssText='position:fixed;right:18px;bottom:82px;z-index:180;background:var(--gold);color:#111;border:0;border-radius:24px;padding:12px 17px;font-weight:800;box-shadow:0 4px 18px #0004;cursor:pointer;';
+  document.body.appendChild(b);
+}
+function installMobileNav(){
+  if(document.getElementById('richly-mobile-nav'))return;
+  const n=document.createElement('div');n.id='richly-mobile-nav';
+  n.innerHTML='<button onclick="goTo(\'dashboard\',null)">⬡<span>Home</span></button><button onclick="goTo(\'expenses\',null)">↕<span>Transactions</span></button><button onclick="goTo(\'investments\',null)">◆<span>Wealth</span></button><button onclick="goTo(\'goals\',null)">◈<span>Goals</span></button><button onclick="toggleMenu()">☰<span>More</span></button>';
+  document.body.appendChild(n);
+}
+
+// ── Dashboard action-oriented metrics ─────────────────────────────────
+function renderActionDashboard(){
+  let box=document.getElementById('dash-action-insights');
+  if(!box){box=document.createElement('div');box.id='dash-action-insights';box.className='card';const hero=document.getElementById('dash-nw-hero');if(hero)hero.insertAdjacentElement('afterend',box);}
+  if(!box)return;
+  const now=new Date(),m=now.getMonth(),y=now.getFullYear();
+  const tx=state.transactions.filter(t=>{const d=new Date(t.date);return d.getMonth()===m&&d.getFullYear()===y;});
+  const spent=tx.filter(t=>t.type==='expense').reduce((a,t)=>a+(+t.amount||0),0);
+  const income=tx.filter(t=>t.type==='income').reduce((a,t)=>a+(+t.amount||0),0);
+  const budget=Object.values(state.budgets||{}).reduce((a,v)=>a+(+v||0),0);
+  const essential=tx.filter(t=>t.type==='expense'&&/rent|emi|grocery|grocer|utility|electric|water|medical|health|insurance/i.test((t.category||'')+' '+(t.description||''))).reduce((a,t)=>a+(+t.amount||0),0);
+  const cash=state.assets.filter(a=>/cash|saving account|current account/i.test(a.cat||'')).reduce((a,x)=>a+(+x.value||0),0);
+  const goalProgress=state.goals.length?Math.round(state.goals.reduce((a,g)=>a+Math.min(1,(+g.saved||0)/(+g.target||1)),0)/state.goals.length*100):0;
+  const emergencyMonths=essential>0?cash/essential:0;
+  const hs=typeof calcHealthScore==='function'?calcHealthScore():{label:'Review needed'};
+  const last=state.transactions.reduce((v,t)=>!v||t.date>v?t.date:v,'');
+  box.innerHTML='<div class="card-title">Your next best actions</div><div class="card-grid-3">'+
+    [['Remaining budget',budget?fmtINR(Math.max(0,budget-spent)):'Set budgets',budget?'Based on monthly category limits':'Add category budgets'],['Savings rate',income?((income-spent)/income*100).toFixed(1)+'%':'—','This month · income minus expenses'],['Emergency coverage',emergencyMonths.toFixed(1)+' months','Estimated from tagged essential expenses and cash/bank assets'],['Upcoming obligations',richlyExtras.reminders.filter(r=>r.status!=='paid'&&r.date>=today()).length,'Unpaid bill reminders'],['Goal progress',goalProgress+'%','Average progress across savings goals'],['Last transaction',last||'No records','Latest transaction date']].map(x=>'<div style="padding:10px;background:var(--bg2);border-radius:9px;margin:4px 0;"><div class="kpi-label">'+x[0]+'</div><div class="kpi-val">'+x[1]+'</div><div class="planning-muted">'+x[2]+'</div></div>').join('')+
+    '</div><div class="planning-muted" style="margin-top:8px;">Financial health: '+hs.label+'. This is an estimate based on the records entered, not financial advice.</div>';
+}
+
+// ── Recurring transactions: review before posting ─────────────────────
+function addRecurringItem(){
+  const title=prompt('Description (e.g. Salary, rent, SIP):');if(!title)return;
+  const amount=Number(prompt('Amount in ₹:'));if(!Number.isFinite(amount)||amount<=0)return alert('Enter a valid positive amount.');
+  const type=(prompt('Type: expense or income','expense')||'expense').toLowerCase();if(!['expense','income'].includes(type))return alert('Type must be expense or income.');
+  const frequency=(prompt('Frequency: monthly, weekly, yearly','monthly')||'monthly').toLowerCase();if(!['monthly','weekly','yearly'].includes(frequency))return alert('Unsupported frequency.');
+  const nextDate=prompt('Next occurrence date (YYYY-MM-DD)',today());if(!/^\d{4}-\d{2}-\d{2}$/.test(nextDate||''))return alert('Enter a valid date.');
+  richlyExtras.recurring.push({id:uid(),title,amount,type,frequency,nextDate,category:type==='expense'?'Other':'',active:true});
+  persistRichlyExtras();renderPlanningHub();
+}
+function reviewRecurringItem(id){
+  const r=richlyExtras.recurring.find(x=>x.id===id);if(!r)return;
+  if(!confirm('Post '+r.title+' for '+fmtINR(r.amount)+' as a '+r.type+' dated '+r.nextDate+'?'))return;
+  state.transactions.push({id:uid(),description:r.title,amount:r.amount,type:r.type,category:r.type==='expense'?(r.category||'Other'):'',date:r.nextDate,note:'Reviewed recurring transaction',person:'',payment:''});
+  const d=new Date(r.nextDate+'T12:00:00');if(r.frequency==='weekly')d.setDate(d.getDate()+7);else if(r.frequency==='yearly')d.setFullYear(d.getFullYear()+1);else d.setMonth(d.getMonth()+1);
+  r.nextDate=d.toISOString().slice(0,10);saveData();persistRichlyExtras();renderPlanningHub();renderDashboard();toast();
+}
+function deleteRecurringItem(id){if(!confirm('Delete this recurring schedule?'))return;richlyExtras.recurring=richlyExtras.recurring.filter(x=>x.id!==id);persistRichlyExtras();renderPlanningHub();}
+
+// ── Bills and reminders ───────────────────────────────────────────────
+function addBillReminder(){
+  const title=document.getElementById('reminder-title').value.trim(),amount=Number(document.getElementById('reminder-amount').value),date=document.getElementById('reminder-date').value;
+  if(!title||!Number.isFinite(amount)||amount<0||!date)return alert('Enter a name, valid amount and due date.');
+  richlyExtras.reminders.push({id:uid(),title,amount,date,status:'due'});persistRichlyExtras();renderPlanningHub();
+  document.getElementById('reminder-title').value='';document.getElementById('reminder-amount').value='';document.getElementById('reminder-date').value='';
+}
+function markReminderPaid(id){const r=richlyExtras.reminders.find(x=>x.id===id);if(r){r.status='paid';r.paidAt=today();persistRichlyExtras();renderPlanningHub();}}
+function deleteReminder(id){richlyExtras.reminders=richlyExtras.reminders.filter(x=>x.id!==id);persistRichlyExtras();renderPlanningHub();}
+
+// ── Emergency fund planner ────────────────────────────────────────────
+function renderEmergencyFund(){
+  const el=document.getElementById('emergency-fund-content');if(!el)return;
+  const months=Math.max(1,Math.min(24,Number(richlyExtras.emergency.months)||6));
+  const last30=state.transactions.filter(t=>t.type==='expense'&&new Date(t.date)>=new Date(Date.now()-90*86400000));
+  const essential=last30.filter(t=>/rent|emi|grocer|grocery|utility|electric|water|medical|health|insurance|education/i.test((t.category||'')+' '+(t.description||''))).reduce((a,t)=>a+(+t.amount||0),0)/3;
+  const liquid=state.assets.filter(a=>/cash|saving account|current account|fixed deposit/i.test(a.cat||'')).reduce((a,x)=>a+(+x.value||0),0);
+  const target=essential*months,pct=target?Math.min(100,liquid/target*100):0;
+  el.innerHTML='<div class="planning-row"><span>Essential monthly expenses (estimated)</span><b>'+fmtINR(essential)+'</b></div><div class="planning-row"><span>Target coverage</span><b><select class="form-input" style="width:90px;display:inline-block" onchange="richlyExtras.emergency.months=+this.value;persistRichlyExtras();renderEmergencyFund()">'+[3,6,9,12].map(n=>'<option value="'+n+'" '+(n===months?'selected':'')+'>'+n+' months</option>').join('')+'</select> · '+fmtINR(target)+'</b></div><div class="planning-row"><span>Cash / bank / FD assets counted</span><b>'+fmtINR(liquid)+'</b></div><div style="height:9px;background:var(--bg3);border-radius:9px;overflow:hidden;margin:12px 0;"><div style="height:100%;width:'+pct+'%;background:#3dffa0;"></div></div><b>'+pct.toFixed(1)+'% funded</b><div class="planning-muted" style="margin-top:6px;">Estimate only: expenses are classified by category/description keywords and liquid assets by their asset category. Review the inputs for accuracy.</div>';
+}
+
+// ── Monthly review ─────────────────────────────────────────────────────
+function renderMonthlyReview(save=false){
+  const el=document.getElementById('monthly-review-content');if(!el)return;
+  const now=new Date(),start=new Date(now.getFullYear(),now.getMonth(),1),prev=new Date(now.getFullYear(),now.getMonth()-1,1);
+  const sum=(from,to,type)=>state.transactions.filter(t=>t.type===type&&new Date(t.date)>=from&&new Date(t.date)<to).reduce((a,t)=>a+(+t.amount||0),0);
+  const end=new Date(now.getFullYear(),now.getMonth()+1,1),prevEnd=start;
+  const exp=sum(start,end,'expense'),inc=sum(start,end,'income'),pExp=sum(prev,prevEnd,'expense'),pInc=sum(prev,prevEnd,'income');
+  const delta=pExp?((exp-pExp)/pExp*100):null;
+  const invested=state.investments.reduce((a,x)=>a+(+x.value||0),0),debt=state.liabilities.reduce((a,x)=>a+(+x.value||0),0);
+  el.innerHTML='<div class="planning-row"><span>Income this month</span><b>'+fmtINR(inc)+'</b></div><div class="planning-row"><span>Expenses this month</span><b>'+fmtINR(exp)+'</b></div><div class="planning-row"><span>Expenses vs last month</span><b>'+(delta===null?'No previous-month baseline':(delta>=0?'+':'')+delta.toFixed(1)+'%')+'</b></div><div class="planning-row"><span>Monthly surplus / deficit</span><b>'+fmtINR(inc-exp)+'</b></div><div class="planning-row"><span>Investment value recorded</span><b>'+fmtINR(invested)+'</b></div><div class="planning-row"><span>Outstanding debt recorded</span><b>'+fmtINR(debt)+'</b></div><div class="planning-row"><span>Savings goals</span><b>'+state.goals.filter(g=>(+g.saved||0)>=(+g.target||Infinity)).length+' / '+state.goals.length+' completed</b></div><div class="planning-muted">This review uses transactions entered for the calendar month; investment and debt values are latest manually recorded balances.</div>';
+  if(save)richlyExtras.lastReview=today();
+}
+function renderMilestones(){
+  const el=document.getElementById('milestones-content');if(!el)return;
+  const totalSaved=state.goals.reduce((a,g)=>a+(+g.saved||0),0),debt=state.liabilities.reduce((a,x)=>a+(+x.value||0),0);
+  const liquid=state.assets.filter(a=>/cash|saving account|current account|fixed deposit/i.test(a.cat||'')).reduce((a,x)=>a+(+x.value||0),0);
+  const items=[['₹1 lakh saved',totalSaved>=100000,'Save at least ₹1,00,000 across your goals'],['Debt-free',debt===0&&state.liabilities.length>0,'Record all liabilities as cleared'],['Emergency fund complete',false,'Reach your selected emergency-fund target'],['First savings goal completed',state.goals.some(g=>(+g.saved||0)>=(+g.target||Infinity)),'Complete any savings goal'],['₹1 lakh liquid reserve',liquid>=100000,'Keep at least ₹1,00,000 in cash/bank/FD assets']];
+  el.innerHTML=items.map(x=>'<div class="planning-row"><span>'+(x[1]?'🏆':'○')+' '+x[0]+'<div class="planning-muted">'+x[2]+'</div></span><b>'+(x[1]?'Achieved':'In progress')+'</b></div>').join('');
+}
+function renderFamilyFinance(){
+  const el=document.getElementById('family-finance-content');if(!el)return;
+  const f=richlyExtras.family;
+  el.innerHTML='<label style="display:flex;gap:8px;align-items:center;margin-bottom:10px;"><input type="checkbox" '+(f.enabled?'checked':'')+' onchange="richlyExtras.family.enabled=this.checked;persistRichlyExtras();renderFamilyFinance()"/> Enable household mode on this device</label><div class="planning-muted">Household profiles and member labels are stored locally in this account/device. This does not create separate logins or share data securely between different accounts.</div><div style="display:flex;gap:8px;margin-top:10px;"><input id="family-member-name" class="form-input" placeholder="Member name"/><select id="family-member-role" class="form-input" style="max-width:130px;"><option>Viewer</option><option>Editor</option><option>Admin</option></select><button class="filter-btn" onclick="addFamilyMember()">Add</button></div><div>'+f.members.map((m,i)=>'<div class="planning-row"><span>'+m.name+' <span class="planning-muted">· '+m.role+'</span></span><button class="filter-btn" onclick="removeFamilyMember('+i+')">Remove</button></div>').join('')+'</div>';
+}
+function addFamilyMember(){const n=document.getElementById('family-member-name').value.trim(),role=document.getElementById('family-member-role').value;if(!n)return;richlyExtras.family.members.push({name:n,role});persistRichlyExtras();renderFamilyFinance();}
+function removeFamilyMember(i){richlyExtras.family.members.splice(i,1);persistRichlyExtras();renderFamilyFinance();}
+
+function renderPlanningHub(){
+  renderEmergencyFund();renderMonthlyReview();renderMilestones();renderFamilyFinance();
+  const r=document.getElementById('recurring-items-list');
+  if(r)r.innerHTML=richlyExtras.recurring.length?richlyExtras.recurring.map(x=>'<div class="planning-row"><span><b>'+x.title+'</b><div class="planning-muted">'+x.type+' · '+x.frequency+' · next '+x.nextDate+'</div></span><span><b>'+fmtINR(x.amount)+'</b> <button class="filter-btn active" onclick="reviewRecurringItem(\''+x.id+'\')">Review & post</button> <button class="filter-btn" onclick="deleteRecurringItem(\''+x.id+'\')">Delete</button></span></div>').join(''):'<div class="planning-muted">No recurring items yet.</div>';
+  const b=document.getElementById('bill-reminders-list');
+  if(b)b.innerHTML=richlyExtras.reminders.length?richlyExtras.reminders.sort((a,c)=>a.date.localeCompare(c.date)).map(x=>'<div class="planning-row"><span><b>'+x.title+'</b><div class="planning-muted">Due '+x.date+' · '+x.status+'</div></span><span><b>'+fmtINR(x.amount)+'</b> '+(x.status!=='paid'?'<button class="filter-btn active" onclick="markReminderPaid(\''+x.id+'\')">Mark paid</button>':'<span class="planning-muted">Paid</span>')+' <button class="filter-btn" onclick="deleteReminder(\''+x.id+'\')">×</button></span></div>').join(''):'<div class="planning-muted">No bill reminders added.</div>';
+  const a=document.getElementById('planning-reminder-alerts');
+  if(a){const due=richlyExtras.reminders.filter(x=>x.status!=='paid'&&x.date>=today()&&x.date<=new Date(Date.now()+7*86400000).toISOString().slice(0,10));a.innerHTML=due.length?'<div class="card" style="border-left:3px solid #ff8c1a;"><b>Upcoming in 7 days</b><div>'+due.map(x=>x.title+' · '+fmtINR(x.amount)+' · '+x.date).join('<br>')+'</div></div>':'';}
+}
+
+// ── Investment quality: dated valuation, sources, flows, gains & benchmark ──
+function invXirr(flows){
+  if(flows.length<2)return null;
+  const t0=new Date(flows[0].date).getTime();if(!Number.isFinite(t0))return null;
+  const npv=r=>flows.reduce((s,f)=>s+f.amount/Math.pow(1+r,(new Date(f.date).getTime()-t0)/(365.25*86400000)),0);
+  let lo=-0.9999,hi=10;
+  for(let i=0;i<120;i++){const mid=(lo+hi)/2,v=npv(mid);if(!Number.isFinite(v))return null;if(v>0)lo=mid;else hi=mid;}
+  const x=(lo+hi)/2;return Number.isFinite(x)?x*100:null;
+}
+function updateInvAudit(id,key,val){
+  const inv=state.investments.find(x=>x.id===id);if(!inv)return;
+  if(['dividends','interest','realizedGain','benchmarkValue'].includes(key))val=Number(val)||0;
+  inv[key]=val;saveData();renderInvAudit();
+}
+function addInvCashflow(id){
+  const inv=state.investments.find(x=>x.id===id);if(!inv)return;
+  const amount=Number(prompt('Cash flow amount (use negative for investment/additional contribution; positive for withdrawal/dividend):'));
+  const date=prompt('Cash flow date (YYYY-MM-DD)',today());if(!Number.isFinite(amount)||!/^\d{4}-\d{2}-\d{2}$/.test(date||''))return;
+  inv.cashflows=inv.cashflows||[];inv.cashflows.push({date,amount});inv.cashflows.sort((a,b)=>a.date.localeCompare(b.date));saveData();renderInvAudit();
+}
+function renderInvAudit(){
+  const table=document.getElementById('inv-table');if(!table)return;
+  let box=document.getElementById('inv-valuation-audit');if(!box){box=document.createElement('div');box.id='inv-valuation-audit';box.className='card';table.insertAdjacentElement('afterend',box);}
+  box.innerHTML='<div class="card-title">Valuation quality & return detail</div>'+state.investments.map(inv=>{
+    const flows=[...(inv.cashflows||[])];if(!flows.some(x=>x.amount>0))flows.push({date:inv.valuationDate||today(),amount:+inv.value||0});
+    const xirr=inv.cashflows?.length?invXirr(flows):null;
+    const stale=!inv.valuationDate||((Date.now()-new Date(inv.valuationDate).getTime())>30*86400000);
+    const abs=(+inv.value||0)-(+inv.invested||inv.value||0);
+    return '<div style="padding:12px 0;border-bottom:1px solid var(--border);"><b>'+inv.name+'</b>'+(stale?'<div style="color:#ff8c1a;font-size:11px;">⚠ Valuation date missing or older than 30 days</div>':'')+
+      '<div class="form-grid form-grid-2" style="margin-top:8px;"><div><label class="form-label">Valuation date</label><input class="form-input" type="date" value="'+(inv.valuationDate||'')+'" onchange="updateInvAudit(\''+inv.id+'\',\'valuationDate\',this.value)"/></div><div><label class="form-label">Value source</label><input class="form-input" placeholder="Broker / AMC / manual" value="'+(inv.valueSource||'').replace(/"/g,'&quot;')+'" onchange="updateInvAudit(\''+inv.id+'\',\'valueSource\',this.value)"/></div><div><label class="form-label">Dividends received ₹</label><input class="form-input" type="number" value="'+(inv.dividends||0)+'" onchange="updateInvAudit(\''+inv.id+'\',\'dividends\',this.value)"/></div><div><label class="form-label">Interest received ₹</label><input class="form-input" type="number" value="'+(inv.interest||0)+'" onchange="updateInvAudit(\''+inv.id+'\',\'interest\',this.value)"/></div><div><label class="form-label">Realized gain ₹</label><input class="form-input" type="number" value="'+(inv.realizedGain||0)+'" onchange="updateInvAudit(\''+inv.id+'\',\'realizedGain\',this.value)"/></div><div><label class="form-label">Benchmark value ₹ (manual)</label><input class="form-input" type="number" value="'+(inv.benchmarkValue||0)+'" onchange="updateInvAudit(\''+inv.id+'\',\'benchmarkValue\',this.value)"/></div></div>'+
+      '<div class="planning-row"><span>Absolute unrealized gain/loss</span><b>'+fmtINR(abs)+'</b></div><div class="planning-row"><span>Income received (dividend + interest)</span><b>'+fmtINR((+inv.dividends||0)+(+inv.interest||0))+'</b></div><div class="planning-row"><span>Return metric</span><b>'+(xirr===null?'Absolute return: '+(inv.invested?((abs/(+inv.invested))*100).toFixed(2)+'%':'—')+' · add dated cash flows for XIRR':('XIRR: '+xirr.toFixed(2)+'%'))+'</b></div>'+
+      '<button class="filter-btn" onclick="addInvCashflow(\''+inv.id+'\')">+ Add dated cash flow</button><div class="planning-muted">Cash flows are manually entered; benchmark comparison is only as current as the benchmark value you enter.</div></div>';
+  }).join('')||'<div class="planning-muted">Add holdings to see valuation details.</div>';
+}
+
+// ── Calculator assumptions, checks and EMI amortization ────────────────
+function renderCalculatorQuality(){
+  const page=document.getElementById('page-calculators');if(!page||document.getElementById('calc-quality-note'))return;
+  const box=document.createElement('div');box.id='calc-quality-note';box.className='card';
+  box.innerHTML='<div class="card-title">Calculation assumptions & checks</div><div class="planning-muted">Results are estimates, not guaranteed returns or tax advice. EMI assumes a fixed annual interest rate and monthly reducing balance; actual lender fees, rate resets and rounding may change payments. SIP projections assume a constant return and monthly contributions. FD estimates depend on compounding frequency and tax. Tax results depend on the selected financial year, regime, deductions and current rules—verify before filing. FIRE projections depend on inflation, withdrawal rate, returns and retirement duration.</div><div id="emi-amortization-summary" style="margin-top:12px;"></div>';
+  page.appendChild(box);
+}
+function renderEmiAmortization(){
+  const el=document.getElementById('emi-amortization-summary');if(!el)return;
+  const a=state.emi||{},principal=Number(a.amount)||0,rate=(Number(a.rate)||0)/1200,months=Math.max(1,Math.round((Number(a.years)||1)*12));
+  const emi=rate?principal*rate*Math.pow(1+rate,months)/(Math.pow(1+rate,months)-1):principal/months;
+  let bal=principal,interest=0,rows=[];
+  for(let m=1;m<=Math.min(months,600);m++){const intr=bal*rate,paid=Math.min(bal,emi-intr);bal=Math.max(0,bal-paid);interest+=intr;if(m<=3||m===months)rows.push({m,paid,intr,bal});}
+  el.innerHTML='<b>Illustrative EMI amortization</b><div class="planning-row"><span>Estimated EMI</span><b>'+fmtINR(emi)+'</b></div><div class="planning-row"><span>Total interest over tenure</span><b>'+fmtINR(interest)+'</b></div><div class="planning-muted">Illustrative schedule using current EMI calculator inputs. First 3 payments and final balance only; no prepayments or rate changes included.</div>';
+}
+const _richlyRenderPage=renderPage;
+renderPage=function(p){_richlyRenderPage(p);if(p==='planning')renderPlanningHub();if(p==='calculators'){renderCalculatorQuality();renderEmiAmortization();}if(p==='investments')renderInvAudit();};
+const _richlyRenderDashboard=renderDashboard;
+renderDashboard=function(){_richlyRenderDashboard();renderActionDashboard();installMoneyToggle();};
+const _richlyInitApp=initApp;
+initApp=function(){_richlyInitApp();installQuickAdd();installMobileNav();setMoneyVisibility(false);renderActionDashboard();};
+document.addEventListener('DOMContentLoaded',()=>{installMoneyToggle();installQuickAdd();installMobileNav();document.body.classList.add('money-hidden');});
 </script>
 </body>
 </html>
