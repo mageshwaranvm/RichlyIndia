@@ -7808,7 +7808,7 @@ function richlyQuickAdd(){
     if(map[choice][1]){const x=document.getElementById(map[choice][1]);if(x)x.value=map[choice][2];}
     if(choice==='3')setTimeout(()=>document.getElementById('ast-name')?.focus(),100);
     if(choice==='4')setTimeout(()=>document.getElementById('lib-name')?.focus(),100);
-    if(choice==='5')setTimeout(()=>document.getElementById('inv-name')?.focus(),100);
+    if(choice==='5')setTimeout(()=>document.getElementById('mf-name')?.focus(),100);
     if(choice==='1'||choice==='2')setTimeout(()=>{onTxTypeChange();document.getElementById('tx-desc')?.focus();},100);
   }else if(choice==='6'){
     goTo('assets',document.querySelector('#sidebar .nav-btn[onclick*="assets"]'));
