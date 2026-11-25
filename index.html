@@ -5009,7 +5009,7 @@ function showTxCSVPreview(result){
       });
       if(sameDescription){isDup=true;dupReason='matching existing transaction';}
     }
-    if(!isDup&&(seenExact.has(exact)||seenWeak.has(weak))){isDup=true;dupReason='duplicate in this file';}
+    if(!isDup&&seenExact.has(exact)){isDup=true;dupReason='duplicate in this file';}
     const row={...r,include:!isDup,isDup,dupReason,account};
     if(!isDup){seenExact.add(exact);seenWeak.add(weak);}
     return row;
