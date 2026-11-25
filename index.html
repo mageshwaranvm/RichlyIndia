@@ -7806,9 +7806,25 @@ function richlyQuickAdd(){
     if(choice==='3')setTimeout(()=>document.getElementById('ast-name')?.focus(),100);
     if(choice==='4')setTimeout(()=>document.getElementById('lib-name')?.focus(),100);
     if(choice==='5')setTimeout(()=>document.getElementById('inv-name')?.focus(),100);
-    if(choice==='1'||choice==='2')setTimeout(()=>document.getElementById('tx-desc')?.focus(),100);
-  }else if(choice==='6')goTo('assets',null);
-  else if(choice==='7')goTo('expenses',null);
+    if(choice==='1'||choice==='2')setTimeout(()=>{onTxTypeChange();document.getElementById('tx-desc')?.focus();},100);
+  }else if(choice==='6'){
+    goTo('assets',document.querySelector('#sidebar .nav-btn[onclick*="assets"]'));
+    setAssetsTab('loans',document.getElementById('ast-tab-loans'));
+    setTimeout(()=>document.getElementById('loan-person')?.focus(),100);
+  }else if(choice==='7'){
+    const open=(state.loansGiven||[]).filter(l=>l.status!=='cleared'&&l.amount-(l.repayments||[]).reduce((a,x)=>a+(+x.amount||0),0)>0);
+    if(!open.length)return alert('No outstanding loans to record a repayment for.');
+    const picked=prompt('Select loan number:\n'+open.map((l,i)=>(i+1)+'. '+l.person+' — outstanding '+fmtINR(l.amount-(l.repayments||[]).reduce((a,x)=>a+(+x.amount||0),0))).join('\n'));
+    const loan=open[Number(picked)-1];if(!loan)return;
+    goTo('assets',document.querySelector('#sidebar .nav-btn[onclick*="assets"]'));
+    setAssetsTab('loans',document.getElementById('ast-tab-loans'));
+    setTimeout(()=>{
+      const amount=prompt('Repayment received from '+loan.person+' (₹):');
+      const input=document.getElementById('repay-amt-'+loan.id);
+      if(input&&Number(amount)>0){input.value=amount;addRepayment(loan.id);}
+      else if(amount!==null)alert('Enter a valid repayment amount.');
+    },150);
+  }
 }
 function installQuickAdd(){
   if(document.getElementById('richly-quick-add'))return;
