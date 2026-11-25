@@ -7759,8 +7759,8 @@ async function restoreRichlyBackup(file){
     if(!mode)return;
     const replace=mode.trim().toUpperCase()==='REPLACE';
     if(!replace&&mode.trim().toUpperCase()!=='MERGE')return alert('Restore cancelled. Enter REPLACE or MERGE.');
-    const arrayKeys=['transactions','goals','investments','assets','liabilities','nwSnapshots','loansGiven'];
-    const objectKeys=['budgets','customCats','customAstCats','customLibCats','customInvTypes','allocTargets'];
+    const arrayKeys=['transactions','goals','investments','assets','liabilities','nwSnapshots','loansGiven','customAstCats','customLibCats'];
+    const objectKeys=['budgets','customCats','customInvTypes','allocTargets','emi','sip','fd','tax','fi'];
     if(replace){
       for(const k of [...arrayKeys,...objectKeys])if(incoming[k]!==undefined)state[k]=Array.isArray(incoming[k])?[...incoming[k]]:{...incoming[k]};
     }else{
@@ -7775,7 +7775,7 @@ async function restoreRichlyBackup(file){
 }
 
 // ── Extra feature storage (device/account-local) ───────────────────────
-function extrasStorageKey(){return 'richly_extras_v1_'+(currentUser?.id||'offline');}
+function extrasStorageKey(){return 'richly_extras_v1';}
 let richlyExtras={recurring:[],reminders:[],emergency:{months:6},family:{enabled:false,members:[]},lastReview:null};
 try{richlyExtras={...richlyExtras,...JSON.parse(localStorage.getItem(extrasStorageKey())||'{}')};}catch(e){}
 function persistRichlyExtras(){try{localStorage.setItem(extrasStorageKey(),JSON.stringify(richlyExtras));}catch(e){alert('Could not save planning data on this device.');}}
@@ -7961,7 +7961,7 @@ function renderInvAudit(){
   const table=document.getElementById('inv-table');if(!table)return;
   let box=document.getElementById('inv-valuation-audit');if(!box){box=document.createElement('div');box.id='inv-valuation-audit';box.className='card';table.insertAdjacentElement('afterend',box);}
   box.innerHTML='<div class="card-title">Valuation quality & return detail</div>'+state.investments.map(inv=>{
-    const flows=[...(inv.cashflows||[])];if(!flows.some(x=>x.amount>0))flows.push({date:inv.valuationDate||today(),amount:+inv.value||0});
+    const flows=[...(inv.cashflows||[])];flows.push({date:inv.valuationDate||today(),amount:+inv.value||0});
     const xirr=inv.cashflows?.length?invXirr(flows):null;
     const stale=!inv.valuationDate||((Date.now()-new Date(inv.valuationDate).getTime())>30*86400000);
     const abs=(+inv.value||0)-(+inv.invested||inv.value||0);
