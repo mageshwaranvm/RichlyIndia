@@ -7213,9 +7213,14 @@ function saveData(){
     }));
   }catch(e){}
 
-  if(!supabase||!currentUser)return;
+  if(!supabase||!currentUser){
+    localStorage.setItem('richly_sync_pending','1');
+    showSyncStatus('Saved on device · waiting for connection');
+    return;
+  }
   clearTimeout(saveTimeout);
-  showSyncStatus('⏳ Saving...');
+  localStorage.setItem('richly_sync_pending','1');
+  showSyncStatus('Syncing...');
   saveTimeout=setTimeout(async()=>{
     // Core payload — only columns that definitely exist
     const corePayload={
@@ -7240,6 +7245,15 @@ function saveData(){
       loans_given:state.loansGiven||[],
     };
     try{
+      // Avoid silently overwriting a newer cloud copy changed on another device.
+      const syncMetaKey='richly_last_sync_'+currentUser.id;
+      const lastSynced=localStorage.getItem(syncMetaKey);
+      const remoteCheck=await supabase.from('richly_data').select('updated_at').eq('user_id',currentUser.id).maybeSingle();
+      if(!remoteCheck.error&&remoteCheck.data?.updated_at&&lastSynced&&new Date(remoteCheck.data.updated_at).getTime()>new Date(lastSynced).getTime()+1000){
+        showSyncStatus('⚠️ Cloud changed elsewhere — review before syncing');
+        localStorage.setItem('richly_sync_conflict','1');
+        return;
+      }
       // Try full payload first
       const{error}=await supabase.from('richly_data').upsert(fullPayload,{onConflict:'user_id'});
       if(error){
@@ -7247,16 +7261,20 @@ function saveData(){
         // Retry with core payload only
         const{error:e2}=await supabase.from('richly_data').upsert(corePayload,{onConflict:'user_id'});
         if(e2){
-          showSyncStatus('⚠️ Sync failed');
+          showSyncStatus('Sync failed · saved on device');
+          localStorage.setItem('richly_sync_pending','1');
           console.warn('Core sync also failed:',e2.message);
         } else {
-          showSyncStatus('✅ Synced (run SQL to enable full sync)');
+          showSyncStatus('Synced');
+          localStorage.removeItem('richly_sync_pending');localStorage.removeItem('richly_sync_conflict');localStorage.setItem(syncMetaKey,corePayload.updated_at);
         }
       } else {
-        showSyncStatus('✅ Synced to cloud');
+        showSyncStatus('Synced');
+        localStorage.removeItem('richly_sync_pending');localStorage.removeItem('richly_sync_conflict');localStorage.setItem(syncMetaKey,corePayload.updated_at);
       }
     }catch(e){
-      showSyncStatus('⚠️ Sync failed');
+      showSyncStatus('Sync failed · saved on device');
+      localStorage.setItem('richly_sync_pending','1');
       console.warn(e);
     }
   },1500);
@@ -7315,6 +7333,12 @@ function loadFromLocalStorage(){
   }catch(e){}
 }
 
+window.addEventListener('online',()=>{
+  if(localStorage.getItem('richly_sync_pending')==='1'){
+    showSyncStatus('Syncing queued changes...');
+    setTimeout(()=>saveData(),500);
+  }
+});
 function showSyncStatus(msg){
   const el=document.getElementById('sync-status');
   if(!el)return;
