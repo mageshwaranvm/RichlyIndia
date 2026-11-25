@@ -571,6 +571,11 @@ body.privacy-mode .result-val{
           </div>
         </div>
 
+        <!-- Balance freshness review -->
+        <div class="card" id="dash-balance-review" style="border-top:3px solid #ff8c1a;margin-bottom:16px;">
+          <div id="dash-balance-review-content"></div>
+        </div>
+
         <!-- Cashflow Card -->
         <div class="card">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
@@ -1205,6 +1210,9 @@ body.privacy-mode .result-val{
             </div>
             <button class="btn btn-accent" onclick="takeSnapshot()">Snapshot Now</button>
           </div>
+        </div>
+        <div class="card" id="nw-review-card" style="border-top:3px solid #ff8c1a;margin-bottom:16px;">
+          <div id="nw-review-content"></div>
         </div>
         <div class="card-grid-4" id="nw-kpis"></div>
         <div class="card" style="margin-bottom:16px;">
@@ -2595,6 +2603,30 @@ function renderDashboard(){
       <div style="font-size:9px;color:#888;">/10</div>
       <div style="font-size:9px;color:${hs.color};margin-top:2px;font-weight:700;">${hs.label}</div>`;
   }
+
+  // Balance freshness + net-worth review
+  const review=getBalanceReview();
+  const reviewEl=document.getElementById('dash-balance-review-content');
+  if(reviewEl){
+    const snapshotText=review.latestSnapshot
+      ? (review.snapshotAge===0?'Snapshot taken today':review.snapshotAge===1?'Snapshot is 1 day old':'Last snapshot was '+review.snapshotAge+' days ago')
+      : 'No net-worth snapshot yet';
+    const snapshotWarn=!review.latestSnapshot||review.snapshotAge>7;
+    if(review.needsReview.length===0&&!snapshotWarn){
+      reviewEl.innerHTML='<div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;"><div><div class="card-title" style="margin-bottom:3px;">✅ Balance Review</div><div style="font-size:11px;color:#888;">All tracked balances are up to date · '+snapshotText+'</div></div><span style="font-size:11px;color:#3dffa0;font-weight:700;">Looks good</span></div>';
+    }else{
+      const parts=[];
+      if(review.stale.length)parts.push(review.stale.length+' stale');
+      if(review.untracked.length)parts.push(review.untracked.length+' not tracked');
+      if(snapshotWarn)parts.push(snapshotText.toLowerCase());
+      reviewEl.innerHTML='<div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;">'+
+        '<div><div class="card-title" style="margin-bottom:3px;color:#ff8c1a;">⚠️ Balance Review Needed</div>'+
+        '<div style="font-size:11px;color:#888;">'+(parts.join(' · ')||'Some financial data needs review')+'</div></div>'+
+        '<button onclick="goTo(\\'assets\\',document.querySelector(\\'.nav-btn[onclick*=assets]\\'))" style="background:#ff8c1a;color:#000;border:none;border-radius:8px;padding:7px 12px;font-size:11px;font-weight:800;cursor:pointer;">Review Balances</button>'+
+      '</div>';
+    }
+  }
+
 
   // Cashflow
   const cfEl=document.getElementById('dash-cashflow');
@@ -7511,6 +7543,27 @@ function balanceUpdateLabel(record){
   return source+' · '+date.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
 }
 
+function balanceFreshness(record,maxAgeDays=30){
+  if(!record||!record.updatedAt)return{status:'untracked',days:null,label:'Update date not tracked'};
+  const at=new Date(record.updatedAt);
+  if(Number.isNaN(at.getTime()))return{status:'untracked',days:null,label:'Update date not tracked'};
+  const days=Math.max(0,Math.floor((Date.now()-at.getTime())/86400000));
+  if(days>maxAgeDays)return{status:'stale',days,label:'Last updated '+days+' days ago'};
+  return{status:'fresh',days,label:days===0?'Updated today':days===1?'Updated yesterday':'Updated '+days+' days ago'};
+}
+function getBalanceReview(){
+  const assets=state.assets.map(a=>({...a,kind:'asset',freshness:balanceFreshness(a)}));
+  const liabilities=state.liabilities.map(l=>({...l,kind:'liability',freshness:balanceFreshness(l)}));
+  const investments=state.investments.map(i=>({...i,kind:'investment',freshness:balanceFreshness({updatedAt:i.lastImportedAt||i.updatedAt},14)}));
+  const items=[...assets,...liabilities,...investments];
+  const needsReview=items.filter(x=>x.freshness.status!=='fresh');
+  const stale=needsReview.filter(x=>x.freshness.status==='stale');
+  const untracked=needsReview.filter(x=>x.freshness.status==='untracked');
+  const latestSnapshot=state.nwSnapshots.length?state.nwSnapshots[state.nwSnapshots.length-1]:null;
+  const snapshotAge=latestSnapshot?.date?Math.max(0,Math.floor((Date.now()-new Date(latestSnapshot.date).getTime())/86400000)):null;
+  return{items,needsReview,stale,untracked,latestSnapshot,snapshotAge};
+}
+
 function addAsset(){
   const name=document.getElementById('ast-name').value.trim();
   const value=parseFloat(document.getElementById('ast-value').value);
@@ -7608,7 +7661,7 @@ function renderAssets(){
         <div style="flex:1;min-width:0;">
           <div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${a.name}</div>
           <div style="font-size:10px;color:#888;">${a.cat}${a.note?' · '+a.note:''}</div>
-          <div style="font-size:10px;color:#777;margin-top:2px;">${balanceUpdateLabel(a)}</div>
+          <div style="font-size:10px;color:${balanceFreshness(a).status==='fresh'?'#777':'#ff8c1a'};margin-top:2px;">${balanceUpdateLabel(a)}${balanceFreshness(a).status!=='fresh'?' · ⚠️ Review':''}</div>
         </div>
         <span class="ast-value" style="display:inline-block;border-radius:6px;min-width:80px;">
           <input type="number" value="${a.value}" onchange="updateAssetValue('${a.id}',this.value)"
@@ -7628,7 +7681,7 @@ function renderAssets(){
         <div style="flex:1;min-width:0;">
           <div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${l.name}</div>
           <div style="font-size:10px;color:#888;">${l.cat}${l.note?' · '+l.note:''}</div>
-          <div style="font-size:10px;color:#777;margin-top:2px;">${balanceUpdateLabel(l)}</div>
+          <div style="font-size:10px;color:${balanceFreshness(l).status==='fresh'?'#777':'#ff8c1a'};margin-top:2px;">${balanceUpdateLabel(l)}${balanceFreshness(l).status!=='fresh'?' · ⚠️ Review':''}</div>
         </div>
         <span class="lib-value" style="display:inline-block;border-radius:6px;min-width:80px;">
           <input type="number" value="${l.value}" onchange="updateLiabilityValue('${l.id}',this.value)"
@@ -7750,6 +7803,31 @@ function renderNetWorth(){
   const totalAst=getTotalAssets();
   const totalLib=getTotalLiabilities();
   const{totalInc,totalExp}=getTotals();
+
+  // Review stale balances before trusting the net-worth figure
+  const review=getBalanceReview();
+  const reviewEl=document.getElementById('nw-review-content');
+  if(reviewEl){
+    const snapshotText=review.latestSnapshot
+      ? (review.snapshotAge===0?'taken today':review.snapshotAge===1?'1 day old':review.snapshotAge+' days old')
+      : 'not taken yet';
+    const flagged=review.needsReview.slice(0,6);
+    const rows=flagged.map(x=>{
+      const color=x.freshness.status==='stale'?'#ff8c1a':'#888';
+      return '<div style="display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid #222;">'+
+        '<span style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+x.name+'</span>'+
+        '<span style="font-size:10px;color:'+color+';white-space:nowrap;">'+(x.kind==='investment'?'Investment · ':'')+x.freshness.label+'</span></div>';
+    }).join('');
+    const snapshotWarn=!review.latestSnapshot||review.snapshotAge>7;
+    const ok=review.needsReview.length===0&&!snapshotWarn;
+    reviewEl.innerHTML=ok
+      ? '<div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;"><div><div class="card-title" style="margin-bottom:3px;">✅ Net-Worth Review</div><div style="font-size:11px;color:#888;">Balances are current and the latest snapshot is '+snapshotText+'.</div></div><span style="font-size:11px;color:#3dffa0;font-weight:700;">Ready</span></div>'
+      : '<div><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;"><div><div class="card-title" style="margin-bottom:3px;color:#ff8c1a;">⚠️ Review Before Relying on Net Worth</div><div style="font-size:11px;color:#888;">'+review.needsReview.length+' balance record'+(review.needsReview.length!==1?'s':'')+' need review · snapshot '+snapshotText+'.</div></div><button onclick="goTo(\\'assets\\',document.querySelector(\\'.nav-btn[onclick*=assets]\\'))" style="background:#ff8c1a;color:#000;border:none;border-radius:8px;padding:7px 12px;font-size:11px;font-weight:800;cursor:pointer;">Review</button></div>'+
+        (rows?'<div style="margin-top:8px;">'+rows+'</div>':'')+
+        (review.needsReview.length>6?'<div style="font-size:10px;color:#888;margin-top:7px;">+'+(review.needsReview.length-6)+' more records need review.</div>':'')+
+      '</div>';
+  }
+
 
   // KPIs
   const prev=state.nwSnapshots.length>=2?state.nwSnapshots[state.nwSnapshots.length-2].netWorth:null;
