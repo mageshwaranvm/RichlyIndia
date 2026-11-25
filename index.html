@@ -4508,7 +4508,7 @@ function detectAndParseCSV(text){
     const plCol=findCol('unrealized p&l','unrealised p&l','p&l','profit','unrealised');
     const instTypeCol=findCol('instrument type','sector','type');
     const toNum=v=>{
-      const n=parseFloat(String(v??'').replace(/[₹,\\s]/g,'').replace(/%$/,''));
+      const n=parseFloat(String(v??'').replace(/[₹,\s]/g,'').replace(/%$/,''));
       return Number.isFinite(n)?n:0;
     };
 
@@ -4673,7 +4673,7 @@ function importCSVConfirm(){
     const name=String(r.name||'').trim();
     if(!name)return;
     const ticker=String(r.ticker||name).trim();
-    const normalizedName=name.toLowerCase().replace(/\\s+/g,' ');
+    const normalizedName=name.toLowerCase().replace(/\s+/g,' ');
     const normalizedTicker=ticker.toUpperCase();
     const sourceKey=`ZERODHA:${type}:${normalizedTicker}`;
     // Match a previous Zerodha import by its stable symbol/name first, then
@@ -4683,7 +4683,7 @@ function importCSVConfirm(){
       if(inv.sourceKey===sourceKey)return true;
       const invTicker=String(inv.ticker||'').trim().toUpperCase();
       if(inv.broker==='Zerodha'&&inv.type===type&&invTicker===normalizedTicker)return true;
-      return String(inv.name||'').trim().toLowerCase().replace(/\\s+/g,' ')===normalizedName;
+      return String(inv.name||'').trim().toLowerCase().replace(/\s+/g,' ')===normalizedName;
     });
     const values={
       name,type,invested:Number(r.invested)||0,value:Number(r.value)||0,
