@@ -1211,6 +1211,9 @@ body.privacy-mode .result-val{
             <button class="btn btn-accent" onclick="takeSnapshot()">Snapshot Now</button>
           </div>
         </div>
+        <div class="card" id="nw-review-card" style="border-top:3px solid #ff8c1a;margin-bottom:16px;">
+          <div id="nw-review-content"></div>
+        </div>
         <div class="card-grid-4" id="nw-kpis"></div>
         <div class="card" style="margin-bottom:16px;">
           <div class="card-title">Net Worth Over Time (Snapshots)</div>
@@ -7800,6 +7803,31 @@ function renderNetWorth(){
   const totalAst=getTotalAssets();
   const totalLib=getTotalLiabilities();
   const{totalInc,totalExp}=getTotals();
+
+  // Review stale balances before trusting the net-worth figure
+  const review=getBalanceReview();
+  const reviewEl=document.getElementById('nw-review-content');
+  if(reviewEl){
+    const snapshotText=review.latestSnapshot
+      ? (review.snapshotAge===0?'taken today':review.snapshotAge===1?'1 day old':review.snapshotAge+' days old')
+      : 'not taken yet';
+    const flagged=review.needsReview.slice(0,6);
+    const rows=flagged.map(x=>{
+      const color=x.freshness.status==='stale'?'#ff8c1a':'#888';
+      return '<div style="display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid #222;">'+
+        '<span style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+x.name+'</span>'+
+        '<span style="font-size:10px;color:'+color+';white-space:nowrap;">'+(x.kind==='investment'?'Investment · ':'')+x.freshness.label+'</span></div>';
+    }).join('');
+    const snapshotWarn=!review.latestSnapshot||review.snapshotAge>7;
+    const ok=review.needsReview.length===0&&!snapshotWarn;
+    reviewEl.innerHTML=ok
+      ? '<div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;"><div><div class="card-title" style="margin-bottom:3px;">✅ Net-Worth Review</div><div style="font-size:11px;color:#888;">Balances are current and the latest snapshot is '+snapshotText+'.</div></div><span style="font-size:11px;color:#3dffa0;font-weight:700;">Ready</span></div>'
+      : '<div><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;"><div><div class="card-title" style="margin-bottom:3px;color:#ff8c1a;">⚠️ Review Before Relying on Net Worth</div><div style="font-size:11px;color:#888;">'+review.needsReview.length+' balance record'+(review.needsReview.length!==1?'s':'')+' need review · snapshot '+snapshotText+'.</div></div><button onclick="goTo(\\'assets\\',document.querySelector(\\'.nav-btn[onclick*=assets]\\'))" style="background:#ff8c1a;color:#000;border:none;border-radius:8px;padding:7px 12px;font-size:11px;font-weight:800;cursor:pointer;">Review</button></div>'+
+        (rows?'<div style="margin-top:8px;">'+rows+'</div>':'')+
+        (review.needsReview.length>6?'<div style="font-size:10px;color:#888;margin-top:7px;">+'+(review.needsReview.length-6)+' more records need review.</div>':'')+
+      '</div>';
+  }
+
 
   // KPIs
   const prev=state.nwSnapshots.length>=2?state.nwSnapshots[state.nwSnapshots.length-2].netWorth:null;
