@@ -4500,34 +4500,41 @@ function detectAndParseCSV(text){
     c.includes('symbol')||c.includes('scrip')||c.includes('average price'));
   if(isZerodha){
     const nameCol=findCol('instrument','tradingsymbol','scrip','symbol');
-    const qtyCol=findCol('quantity available','qty available','qty','quantity');
-    const avgCol=findCol('average price','avg price','avg cost','avg. cost','average cost','avg');
-    const closingCol=findCol('previous closing price','closing price','ltp','last price','current price','prev close');
+    const qtyCol=findCol('quantity available','qty available','qty.','qty','quantity','units');
+    const avgCol=findCol('average price','avg price','avg. cost','avg cost','average cost','avg');
+    const investedCol=findCol('invested','investment value','invested value','buy value','cost value');
+    const currentCol=findCol('cur. val','cur val','current value','current valuation','market value');
+    const closingCol=findCol('previous closing price','closing price','ltp','last price','current price','prev close','nav');
     const plCol=findCol('unrealized p&l','unrealised p&l','p&l','profit','unrealised');
     const instTypeCol=findCol('instrument type','sector','type');
+    const toNum=v=>{
+      const n=parseFloat(String(v??'').replace(/[₹,\s]/g,'').replace(/%$/,''));
+      return Number.isFinite(n)?n:0;
+    };
 
     const out=[];
     for(const r of rows){
-      if(!r[nameCol])continue;
+      if(nameCol<0||!r[nameCol])continue;
       const name=String(r[nameCol]).replace(/"/g,'').trim();
-      if(!name||name.toLowerCase()==='total'||name.toLowerCase()==='symbol')continue;
+      if(!name||['total','symbol','instrument'].includes(name.toLowerCase()))continue;
 
-      const qty=parseFloat(String(r[qtyCol]||'').replace(/,/g,''))||0;
-      const avg=parseFloat(String(r[avgCol]||'').replace(/,/g,''))||0;
-      const closing=closingCol>=0?parseFloat(String(r[closingCol]||'').replace(/,/g,''))||0:0;
-      const pl=plCol>=0?parseFloat(String(r[plCol]||'').replace(/,/g,''))||0:0;
+      const qty=qtyCol>=0?toNum(r[qtyCol]):0;
+      const avg=avgCol>=0?toNum(r[avgCol]):0;
+      const closing=closingCol>=0?toNum(r[closingCol]):0;
+      const pl=plCol>=0?toNum(r[plCol]):0;
       const sector=instTypeCol>=0?String(r[instTypeCol]||'').toLowerCase():'';
 
-      // invested = qty × average price
-      const invested=qty>0&&avg>0?Math.round(qty*avg*100)/100:0;
-      // current = qty × previous closing price; fallback to invested + P&L
-      let current=qty>0&&closing>0?Math.round(qty*closing*100)/100:0;
+      // Prefer Zerodha's own amount columns to avoid rounding errors from qty × price.
+      const investedFromFile=investedCol>=0?toNum(r[investedCol]):0;
+      const currentFromFile=currentCol>=0?toNum(r[currentCol]):0;
+      const invested=investedFromFile>0?investedFromFile:
+        (qty>0&&avg>0?Math.round(qty*avg*100)/100:0);
+      let current=currentFromFile>0?currentFromFile:
+        (qty>0&&closing>0?Math.round(qty*closing*100)/100:0);
       if(current===0&&invested>0)current=Math.round((invested+pl)*100)/100;
       if(current===0)current=invested;
+      if(invested===0&&current===0)continue;
 
-      if(!name||invested===0&&current===0)continue;
-
-      // Detect type: funds have "fund" in name or debt/liquid/hybrid in sector
       let type='Stocks (NSE/BSE)';
       const nameLower=name.toLowerCase();
       if(sector.includes('debt')||sector.includes('liquid')||sector.includes('hybrid')||
@@ -4536,8 +4543,13 @@ function detectAndParseCSV(text){
          nameLower.includes('growth')){
         type='Mutual Fund';
       }
-
-      out.push({name,type,invested,value:current,qty});
+      out.push({
+        name,type,invested:Math.round(invested*100)/100,
+        value:Math.round(current*100)/100,qty,
+        ticker:type==='Stocks (NSE/BSE)'?name.toUpperCase():name,
+        avgCost:avg,ltp:closing,broker:'Zerodha',
+        importSource:'zerodha_csv'
+      });
     }
     if(out.length>0)return{format:'zerodha',rows:out,count:out.length};
   }
@@ -4655,36 +4667,44 @@ function showCSVPreview(result){
 function importCSVConfirm(){
   if(!csvParsed||csvParsed.length===0)return;
   let added=0,updated=0;
+  const importedAt=new Date().toISOString();
   csvParsed.forEach((r,i)=>{
     const type=document.getElementById(`csv-type-${i}`)?.value||r.type;
-    // If a holding with the same name already exists, overwrite its values instead of skipping
-    const existing=state.investments.find(inv=>inv.name.toLowerCase()===r.name.toLowerCase());
-    if(existing){
-      existing.type=type;
-      existing.invested=r.invested;
-      existing.value=r.value;
-      existing.qty=r.qty||0;
-      existing.ticker=r.ticker||existing.ticker||r.name;
-      updated++;
-      return;
-    }
-    state.investments.push({
-      id:uid(),
-      name:r.name,
-      type,
-      invested:r.invested,
-      value:r.value,
-      qty:r.qty||0,
-      ticker:r.ticker||r.name  // use name as ticker fallback for NSE stocks
+    const name=String(r.name||'').trim();
+    if(!name)return;
+    const ticker=String(r.ticker||name).trim();
+    const normalizedName=name.toLowerCase().replace(/\s+/g,' ');
+    const normalizedTicker=ticker.toUpperCase();
+    const sourceKey=`ZERODHA:${type}:${normalizedTicker}`;
+    // Match a previous Zerodha import by its stable symbol/name first, then
+    // match a manually-entered holding by name. Never remove holdings absent
+    // from a statement: a partial CSV must not accidentally liquidate data.
+    const existing=state.investments.find(inv=>{
+      if(inv.sourceKey===sourceKey)return true;
+      const invTicker=String(inv.ticker||'').trim().toUpperCase();
+      if(inv.broker==='Zerodha'&&inv.type===type&&invTicker===normalizedTicker)return true;
+      return String(inv.name||'').trim().toLowerCase().replace(/\s+/g,' ')===normalizedName;
     });
-    added++;
+    const values={
+      name,type,invested:Number(r.invested)||0,value:Number(r.value)||0,
+      qty:Number(r.qty)||0,shares:Number(r.qty)||0,
+      ticker,price:Number(r.ltp)||0,avgCost:Number(r.avgCost)||0,
+      ltp:Number(r.ltp)||0,broker:r.broker||'CSV',
+      importSource:r.importSource||'csv',sourceKey,lastImportedAt:importedAt
+    };
+    if(existing){
+      Object.assign(existing,values);
+      updated++;
+    }else{
+      state.investments.push({id:uid(),...values});
+      added++;
+    }
   });
-  saveData();renderInvestments();renderDashboard();
+  saveData();renderInvestments();renderDashboard();updateHeader();
   clearCSVPreview();
-  // Reset file input
   const fi=document.getElementById('csv-file-input');
   if(fi)fi.value='';
-  showToastMsg(`✅ Imported ${added} new holding${added!==1?'s':''}${updated>0?` · ${updated} updated`:''}`);
+  showToastMsg(`✅ Imported ${added} new holding${added!==1?'s':''}${updated>0?` · ${updated} updated`:''}. Existing holdings not in this file were kept.`);
 }
 
 function clearCSVPreview(){
