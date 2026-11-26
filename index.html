@@ -7399,15 +7399,10 @@ function saveData(){
       loans_given:state.loansGiven||[],
     };
     try{
-      // Avoid silently overwriting a newer cloud copy changed on another device.
+      // This is a single-owner finance app: the latest intentional edit on this
+      // signed-in device is authoritative. Do not block autosave with a stale
+      // client timestamp or ask the user to resolve a cloud/device conflict.
       const syncMetaKey='richly_last_sync_'+currentUser.id;
-      const lastSynced=localStorage.getItem(syncMetaKey);
-      const remoteCheck=await supabase.from('richly_data').select('updated_at').eq('user_id',currentUser.id).maybeSingle();
-      if(!remoteCheck.error&&remoteCheck.data?.updated_at&&lastSynced&&new Date(remoteCheck.data.updated_at).getTime()>new Date(lastSynced).getTime()+1000){
-        showSyncStatus('⚠️ Cloud changed elsewhere — review before syncing');
-        localStorage.setItem('richly_sync_conflict','1');
-        return;
-      }
       // Try full payload first
       const{error}=await supabase.from('richly_data').upsert(fullPayload,{onConflict:'user_id'});
       if(error){
@@ -7448,6 +7443,9 @@ async function loadFromSupabase(){
     return;
   }
   if(data){
+    // Keep the local sync marker aligned with the cloud snapshot we just loaded.
+    if(data.updated_at)localStorage.setItem('richly_last_sync_'+currentUser.id,data.updated_at);
+    localStorage.removeItem('richly_sync_conflict');
     if(data.transactions)state.transactions=data.transactions;
     if(data.budgets)state.budgets={...state.budgets,...data.budgets};
     if(data.goals)state.goals=data.goals;
@@ -8316,36 +8314,6 @@ setMoneyVisibility=function(show){
 };
 </script>
 
-<script>
-// Explicit resolution for cross-device sync conflicts; never silently overwrite.
-async function resolveRichlySyncConflict(choice){
-  if(!supabase||!currentUser)return alert('Sign in with an internet connection to resolve this sync conflict.');
-  const key='richly_last_sync_'+currentUser.id;
-  if(choice==='cloud'){
-    localStorage.removeItem('richly_sync_conflict');localStorage.removeItem('richly_sync_pending');
-    await loadFromSupabase();showSyncStatus('Loaded the newer cloud copy');
-    return;
-  }
-  if(choice==='device'){
-    const remote=await supabase.from('richly_data').select('updated_at').eq('user_id',currentUser.id).maybeSingle();
-    if(remote.error)return alert('Could not check the cloud version: '+remote.error.message);
-    if(!confirm('Replace the newer cloud copy with the data currently on this device? Export a backup first if unsure.'))return;
-    if(remote.data?.updated_at)localStorage.setItem(key,remote.data.updated_at);
-    localStorage.removeItem('richly_sync_conflict');localStorage.setItem('richly_sync_pending','1');
-    saveData();
-  }
-}
-const _richlyShowSyncStatus=showSyncStatus;
-showSyncStatus=function(msg){
-  _richlyShowSyncStatus(msg);
-  const el=document.getElementById('sync-status');if(!el)return;
-  let controls=document.getElementById('richly-sync-conflict-controls');
-  if(msg.includes('Cloud changed elsewhere')){
-    if(!controls){controls=document.createElement('span');controls.id='richly-sync-conflict-controls';controls.style.cssText='display:inline-flex;gap:5px;margin-left:8px;flex-wrap:wrap;';el.insertAdjacentElement('afterend',controls);}
-    controls.innerHTML='<button type="button" class="filter-btn" onclick="resolveRichlySyncConflict(\'cloud\')">Use cloud copy</button><button type="button" class="filter-btn" onclick="resolveRichlySyncConflict(\'device\')">Keep this device</button>';
-    controls.style.display='inline-flex';
-  }else if(controls){controls.style.display='none';}
-};
-</script>
+
 </body>
 </html>
