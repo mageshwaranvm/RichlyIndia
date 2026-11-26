@@ -17,10 +17,20 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
 <script>
-// Register the offline-capable service worker without deleting its caches.
+// Register the offline-capable service worker and check for updates on every app launch.
 if('serviceWorker' in navigator){
+  let richlyRefreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange',function(){
+    if(richlyRefreshing) return;
+    richlyRefreshing = true;
+    window.location.reload();
+  });
   window.addEventListener('load',function(){
-    navigator.serviceWorker.register('./sw.js').catch(function(err){console.warn('Offline support unavailable',err);});
+    navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'})
+      .then(function(registration){
+        registration.update().catch(function(err){console.warn('Richly update check failed',err);});
+      })
+      .catch(function(err){console.warn('Offline support unavailable',err);});
   });
 }
 </script>
