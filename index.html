@@ -962,7 +962,7 @@ body.privacy-mode .result-val{
               <div class="form-group"><label class="form-label">Folio / Symbol (optional)</label><input class="form-input" id="mf-ticker" placeholder="e.g. HDFCNIFTY"/></div>
               <div class="form-group"><label class="form-label">Amount Invested (₹)</label><input class="form-input" id="mf-invested" type="number" placeholder="e.g. 50000" min="0" oninput="calcMF()"/></div>
               <div class="form-group"><label class="form-label">Current Value (₹)</label><input class="form-input" id="mf-curval" type="number" placeholder="e.g. 58000" min="0" oninput="calcMF()"/></div>
-              <div class="form-group"><label class="form-label">Invested Since (optional, for XIRR)</label><input class="form-input" id="mf-date" type="date"/></div>
+              
             </div>
             <div id="mf-pl" style="background:#1e1e1e;border-radius:8px;padding:10px 14px;margin-bottom:10px;font-size:13px;display:none;"></div>
             <div style="display:flex;justify-content:flex-end;"><button class="btn btn-blue" onclick="addMF()">+ Add Mutual Fund</button></div>
@@ -975,7 +975,7 @@ body.privacy-mode .result-val{
               <div class="form-group"><label class="form-label">NSE / BSE Symbol (optional)</label><input class="form-input" id="st-ticker" placeholder="e.g. RELIANCE"/></div>
               <div class="form-group"><label class="form-label">Amount Invested (₹)</label><input class="form-input" id="st-invested" type="number" placeholder="e.g. 25000" min="0" oninput="calcStock()"/></div>
               <div class="form-group"><label class="form-label">Current Value (₹)</label><input class="form-input" id="st-curval" type="number" placeholder="e.g. 32000" min="0" oninput="calcStock()"/></div>
-              <div class="form-group"><label class="form-label">Invested Since (optional, for XIRR)</label><input class="form-input" id="st-date" type="date"/></div>
+              
               <div class="form-group"><label class="form-label">Stock Type</label>
                 <select class="form-input" id="st-type">
                   <option>Stocks (NSE/BSE)</option>
@@ -994,7 +994,7 @@ body.privacy-mode .result-val{
               <div class="form-group"><label class="form-label">Symbol (optional)</label><input class="form-input" id="oth-ticker" placeholder="e.g. BTC"/></div>
               <div class="form-group"><label class="form-label">Amount Invested (₹)</label><input class="form-input" id="oth-invested" type="number" placeholder="e.g. 10000" min="0" oninput="calcOther()"/></div>
               <div class="form-group"><label class="form-label">Current Value (₹)</label><input class="form-input" id="oth-curval" type="number" placeholder="e.g. 12000" min="0" oninput="calcOther()"/></div>
-              <div class="form-group"><label class="form-label">Invested Since (optional, for XIRR)</label><input class="form-input" id="oth-date" type="date"/></div>
+              
               <div class="form-group"><label class="form-label">Type</label>
                 <div style="display:flex;gap:6px;">
                   <select class="form-input" id="oth-type" style="flex:1;">
@@ -6541,176 +6541,25 @@ function renderPortfolioCompare(d){
 }
 
 // ═══════════════════════════════════════════════════════
-// RETURNS TAB — Absolute Return, CAGR (per holding) & XIRR (portfolio)
-// ═══════════════════════════════════════════════════════
-
-// XNPV: net present value of a series of dated cash flows at a given annual rate
-function xnpv(rate,cashflows){
-  const d0=cashflows[0].date;
-  return cashflows.reduce((sum,cf)=>{
-    const years=(cf.date-d0)/(365*24*3600*1000);
-    return sum+cf.amount/Math.pow(1+rate,years);
-  },0);
-}
-
-// XIRR: annualized rate that makes the XNPV of dated cash flows zero.
-// Newton-Raphson first, falls back to bisection if it doesn't converge.
-function xirr(cashflows){
-  const flows=[...cashflows].sort((a,b)=>a.date-b.date);
-  const hasNeg=flows.some(f=>f.amount<0),hasPos=flows.some(f=>f.amount>0);
-  if(!hasNeg||!hasPos)return null;
-
-  // Newton-Raphson
-  let rate=0.1;
-  for(let i=0;i<100;i++){
-    const f=xnpv(rate,flows);
-    const h=1e-6;
-    const df=(xnpv(rate+h,flows)-f)/h;
-    if(df===0)break;
-    const next=rate-f/df;
-    if(!isFinite(next))break;
-    if(Math.abs(next-rate)<1e-7){rate=next;return rate;}
-    rate=next;
-    if(rate<=-0.999)rate=-0.999+1e-6;
-  }
-  if(isFinite(rate)&&Math.abs(xnpv(rate,flows))<1){return rate;}
-
-  // Bisection fallback
-  let low=-0.999,high=10;
-  let fLow=xnpv(low,flows),fHigh=xnpv(high,flows);
-  if(isNaN(fLow)||isNaN(fHigh))return null;
-  if(fLow*fHigh>0){high=100;fHigh=xnpv(high,flows);if(fLow*fHigh>0)return null;}
-  for(let i=0;i<200;i++){
-    const mid=(low+high)/2;
-    const fMid=xnpv(mid,flows);
-    if(Math.abs(fMid)<1)return mid;
-    if(fLow*fMid<0){high=mid;fHigh=fMid;}else{low=mid;fLow=fMid;}
-  }
-  return(low+high)/2;
-}
-
-function clSetInvDate(id){
-  const val=document.getElementById('ret-date-'+id)?.value;
-  if(!val)return;
-  const inv=state.investments.find(i=>i.id===id);
-  if(!inv)return;
-  inv.investedDate=val;
-  saveData();
-  const d=buildPortfolioData();
-  renderPortfolioReturns(d);
-  showToastMsg('✅ Date saved for '+inv.name);
-}
-
-function renderPortfolioReturns(d){
-  const el=document.getElementById('inv-view-returns');
-  if(!el||!d)return;
-
+// RETURNS TAB — Absolute Return only (no dated cash-flow/XIRR inputs)
+function renderPortfolioReturns(){
+  const el=document.getElementById('inv-view-returns');if(!el)return;
   const invs=state.investments;
-  const today=new Date();
-  const MS_YEAR=365.25*24*3600*1000;
-
-  const dated=invs.filter(i=>i.investedDate);
-  const undated=invs.filter(i=>!i.investedDate);
-
-  // Portfolio-level XIRR: each dated holding's invested amount as an outflow
-  // on its own date, plus the CURRENT combined value of those same dated
-  // holdings as a single inflow today. Undated holdings are excluded so the
-  // number stays honest until their dates are filled in.
-  let portfolioXIRR=null,datedValue=0,datedInvested=0;
-  if(dated.length>0){
-    const flows=dated.map(i=>({amount:-(i.invested||i.value),date:new Date(i.investedDate)}));
-    datedValue=dated.reduce((s,i)=>s+i.value,0);
-    datedInvested=dated.reduce((s,i)=>s+(i.invested||i.value),0);
-    flows.push({amount:datedValue,date:today});
-    portfolioXIRR=xirr(flows);
-  }
-
-  const totalInvested=invs.reduce((s,i)=>s+(i.invested||i.value),0)||1;
-  const totalValue=invs.reduce((s,i)=>s+i.value,0);
-  const absReturn=((totalValue-totalInvested)/totalInvested*100);
-
-  // Summary cards
-  const xirrColor=portfolioXIRR===null?'var(--text2)':portfolioXIRR>=0.12?'#3ecf8e':portfolioXIRR>=0?'#f0a84c':'#f16b6b';
-  const summaryHtml=`
-    <div class="card-grid-3" style="margin-bottom:12px;">
-      <div class="kpi-card" style="border-top:3px solid #4af4ff;">
-        <div class="kpi-label">Absolute Return</div>
-        <div class="kpi-val" style="color:${absReturn>=0?'#3ecf8e':'#f16b6b'};font-size:20px;">${absReturn>=0?'+':''}${absReturn.toFixed(1)}%</div>
-        <div style="font-size:10px;color:var(--text2);">${fmtINR(totalInvested)} → ${fmtINR(totalValue)}</div>
-      </div>
-      <div class="kpi-card" style="border-top:3px solid #f0ff44;">
-        <div class="kpi-label">Portfolio XIRR</div>
-        <div class="kpi-val" style="color:${xirrColor};font-size:20px;">${portfolioXIRR===null?'—':(portfolioXIRR*100).toFixed(1)+'%'}</div>
-        <div style="font-size:10px;color:var(--text2);">annualized · ${dated.length}/${invs.length} holdings dated</div>
-      </div>
-      <div class="kpi-card" style="border-top:3px solid #3dffa0;">
-        <div class="kpi-label">Total Invested</div>
-        <div class="kpi-val" style="font-size:20px;">${fmtINR(totalInvested)}</div>
-        <div style="font-size:10px;color:var(--text2);">across ${invs.length} holdings</div>
-      </div>
-    </div>`;
-
-  const missingNote=undated.length>0?`
-    <div class="card" style="border-top:3px solid #f0a84c;">
-      <div class="card-title" style="color:#f0a84c;">⚠️ ${undated.length} holding${undated.length!==1?'s':''} missing a purchase date</div>
-      <div style="font-size:11px;color:var(--text2);margin-bottom:12px;">These are excluded from Portfolio XIRR above. Add a date to include them.</div>
-      ${undated.map(i=>`
-        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
-          <div style="flex:1;font-size:12px;font-weight:700;">${i.name}</div>
-          <input class="form-input" type="date" id="ret-date-${i.id}" style="flex:1;font-size:12px;padding:6px 8px;"/>
-          <button onclick="clSetInvDate('${i.id}')" style="background:#3dffa0;color:#000;border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:800;cursor:pointer;">Save</button>
-        </div>`).join('')}
-    </div>`:'';
-
-  // Per-holding table: Absolute Return + CAGR (CAGR needs a date; too-recent dates are flagged)
-  const rowsHtml=invs.map(i=>{
-    const invested=i.invested||i.value;
-    const pl=i.value-invested;
-    const plPct=invested>0?(pl/invested*100):0;
-    let cagrHtml='<span style="color:var(--text3);">— add date</span>';
-    if(i.investedDate){
-      const years=(today-new Date(i.investedDate))/MS_YEAR;
-      if(years<0.08){
-        cagrHtml='<span style="color:var(--text3);">too recent</span>';
-      } else if(invested>0){
-        const cagr=(Math.pow(i.value/invested,1/years)-1)*100;
-        const cc=cagr>=0?'#3ecf8e':'#f16b6b';
-        cagrHtml=`<span style="color:${cc};font-weight:700;">${cagr>=0?'+':''}${cagr.toFixed(1)}%</span>`;
-      }
-    }
-    return`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--card-border);gap:10px;">
-      <div style="flex:1;min-width:0;">
-        <div style="font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${i.name}</div>
-        <div style="font-size:10px;color:var(--text2);">${i.investedDate||'no date set'}</div>
-      </div>
-      <div style="text-align:right;min-width:64px;">
-        <div style="font-size:10px;color:var(--text2);">Abs. Return</div>
-        <div style="font-size:12px;font-weight:700;color:${plPct>=0?'#3ecf8e':'#f16b6b'};">${plPct>=0?'+':''}${plPct.toFixed(1)}%</div>
-      </div>
-      <div style="text-align:right;min-width:80px;">
-        <div style="font-size:10px;color:var(--text2);">CAGR</div>
-        <div style="font-size:12px;">${cagrHtml}</div>
-      </div>
-    </div>`;
+  const totalInvested=invs.reduce((s,i)=>s+(Number(i.invested)||Number(i.value)||0),0);
+  const totalValue=invs.reduce((s,i)=>s+(Number(i.value)||0),0);
+  const gain=totalValue-totalInvested;
+  const pct=totalInvested>0?(gain/totalInvested)*100:null;
+  const rows=invs.map(i=>{
+    const invested=Number(i.invested)||Number(i.value)||0,value=Number(i.value)||0;
+    const pl=value-invested,plPct=invested>0?(pl/invested)*100:null;
+    return \`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--card-border);gap:10px;"><div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:700;">\${i.name}</div><div style="font-size:10px;color:var(--text2);">Invested \${fmtINR(invested)} · Current \${fmtINR(value)}</div></div><div style="text-align:right;"><div style="font-size:12px;font-weight:700;color:\${pl>=0?'#3ecf8e':'#f16b6b'};">\${pl>=0?'+':''}\${fmtINR(pl)}</div><div style="font-size:11px;color:\${pl>=0?'#3ecf8e':'#f16b6b'};">\${plPct===null?'—':(plPct>=0?'+':'')+plPct.toFixed(2)+'%'}</div></div></div>\`;
   }).join('');
-
-  el.innerHTML=`
-    ${summaryHtml}
-    ${missingNote}
-    <div class="card">
-      <div class="card-title">Per-Holding Returns</div>
-      <div style="font-size:11px;color:var(--text2);margin-bottom:8px;">Absolute Return ignores time held · CAGR annualizes it (needs a purchase date)</div>
-      ${rowsHtml}
-    </div>
-    <div style="font-size:10px;color:var(--text3);padding:10px 12px;background:var(--bg3);border-radius:8px;line-height:1.6;">
-      💡 <b>Absolute Return</b> = total gain %, regardless of time. <b>CAGR</b> = annualized rate for a single lump sum. <b>XIRR</b> = annualized rate across money invested at different times — the most accurate measure for a real portfolio built over time.
-    </div>`;
+  el.innerHTML=\`<div class="card-grid-3" style="margin-bottom:12px;"><div class="kpi-card"><div class="kpi-label">Total Invested</div><div class="kpi-val" style="font-size:20px;">\${fmtINR(totalInvested)}</div></div><div class="kpi-card"><div class="kpi-label">Current Value</div><div class="kpi-val" style="font-size:20px;">\${fmtINR(totalValue)}</div></div><div class="kpi-card"><div class="kpi-label">Absolute Gain/Loss</div><div class="kpi-val" style="font-size:20px;color:\${gain>=0?'#3ecf8e':'#f16b6b'};">\${gain>=0?'+':''}\${fmtINR(gain)}</div><div style="font-size:11px;color:var(--text2);">\${pct===null?'—':(pct>=0?'+':'')+pct.toFixed(2)+'%'} absolute return</div></div></div><div class="card"><div class="card-title">Returns by Holding</div><div style="font-size:11px;color:var(--text2);margin-bottom:8px;">Absolute return compares current value with recorded invested amount. No purchase dates or cash-flow history required.</div>\${rows||'<div class="planning-muted">Add investments to see returns.</div>'}</div>\`;
 }
 let currentInvTab='holdings';
 function setInvTab(tab,btn){
   currentInvTab=tab;
-  document.querySelectorAll('#inv-tab-holdings,#inv-tab-sector,#inv-tab-stock,#inv-tab-compare,#inv-tab-returns')
-    .forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('#inv-tab-holdings,#inv-tab-sector,#inv-tab-stock,#inv-tab-compare,#inv-tab-returns').forEach(b=>b.classList.remove('active'));
   if(btn)btn.classList.add('active');
   document.getElementById('inv-view-holdings').style.display=tab==='holdings'?'':'none';
   document.getElementById('inv-view-sector').style.display=tab==='sector'?'':'none';
@@ -6719,11 +6568,7 @@ function setInvTab(tab,btn){
   document.getElementById('inv-view-returns').style.display=tab==='returns'?'':'none';
   if(tab!=='holdings'){
     const d=buildPortfolioData();
-    if(!d){
-      const el=document.getElementById('inv-view-'+tab);
-      if(el)el.innerHTML='<div class="card"><div style="color:var(--text2);text-align:center;padding:32px;">Add investments first to see analysis.</div></div>';
-      return;
-    }
+    if(!d){const target=document.getElementById('inv-view-'+tab);if(target)target.innerHTML='<div class="card"><div style="color:var(--text2);text-align:center;padding:32px;">Add investments first to see analysis.</div></div>';return;}
     if(tab==='sector')renderPortfolioSector(d);
     else if(tab==='stock')renderPortfolioStock(d);
     else if(tab==='compare')renderPortfolioCompare(d);
@@ -6732,97 +6577,6 @@ function setInvTab(tab,btn){
 }
 
 // ═══════════════════════════════════════════════════════
-function renderInvestments(){
-  const total=state.investments.reduce((s,i)=>s+i.value,0);
-  const totalInvested=state.investments.reduce((s,i)=>s+(i.invested||i.value),0);
-  const totalPL=total-totalInvested;
-  const totalPLPct=totalInvested>0?((totalPL/totalInvested)*100).toFixed(2):0;
-  const latestImported=state.investments.reduce((latest,i)=>{
-    const t=i.lastImportedAt?new Date(i.lastImportedAt).getTime():0;
-    return t>latest? t:latest;
-  },0);
-  const latestImportedLabel=latestImported?new Date(latestImported).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'No Zerodha refresh yet';
-  const byType=Object.keys(INV_COLORS).reduce((a,t)=>({...a,[t]:state.investments.filter(i=>i.type===t).reduce((s,i)=>s+i.value,0)}),{});
-  const slices=Object.entries(byType).filter(([,v])=>v>0).map(([t,v])=>({value:v,color:INV_COLORS[t]}));
-
-  // Portfolio summary
-  const sumEl=document.getElementById('inv-summary');
-  if(sumEl&&state.investments.length>0){
-    const plColor=totalPL>=0?'#3dffa0':'#ff6b6b';
-    sumEl.innerHTML=[
-      {label:'Total Invested',val:fmtINR(totalInvested),color:'#4af4ff'},
-      {label:'Current Value',val:fmtINR(total),color:'#3dffa0'},
-      {label:'Overall P&L',val:`${totalPL>=0?'+':''}${fmtINR(totalPL)}<br><span style="font-size:12px;">${totalPL>=0?'+':''}${totalPLPct}%</span>`,color:plColor},
-    ].map(k=>`<div class="kpi-card" style="border-top:3px solid ${k.color};text-align:center;margin-bottom:16px;">
-      <div class="kpi-label">${k.label}</div>
-      <div class="kpi-val" style="color:${k.color};font-size:16px;">${k.val}</div>
-    </div>`).join('')+
-    `<div style="font-size:10px;color:var(--text2);text-align:center;margin:-6px 0 14px;">Last Zerodha refresh: ${latestImportedLabel}</div>`;
-  } else if(sumEl){sumEl.innerHTML='';}
-
-  // Holdings table
-  document.getElementById('inv-table').innerHTML=state.investments.length===0?
-    '<div style="color:#888;font-size:13px;text-align:center;padding:28px 0;">No holdings yet. Add your first investment above!</div>':
-    state.investments.map(inv=>{
-      const invested=inv.invested||inv.value;
-      const pl=inv.value-invested;
-      const plPct=invested>0?((pl/invested)*100).toFixed(1):0;
-      const plColor=pl>=0?'#3dffa0':'#ff6b6b';
-      const isMF=inv.type==='Mutual Fund';
-      const isStock=inv.type==='Stocks (NSE/BSE)'||inv.type==='US Stocks';
-      return`<div id="inv-row-${inv.id}" style="border-bottom:1px solid #1e1e1e;">
-        <div style="padding:10px 8px;border-radius:8px;" onmouseenter="this.style.background='#1e1e1e'" onmouseleave="this.style.background='transparent'">
-          <!-- Row header -->
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
-            <div>
-              <div style="font-weight:700;font-size:13px;">${inv.name} ${inv.ticker?`<span style="font-size:10px;color:#888;">(${inv.ticker})</span>`:''}</div>
-              <div style="margin-top:3px;">${makeTag(inv.type,INV_COLORS[inv.type]||'#aaa')}</div>
-            </div>
-            ${make3dot('inv'+inv.id,`editInv('${inv.id}')`,`deleteInv('${inv.id}')`)}          </div>
-          <!-- Row data -->
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;">
-            <div style="background:#1a1a1a;border-radius:8px;padding:7px 10px;">
-              <div style="font-size:10px;color:#888;margin-bottom:2px;">Invested</div>
-              <div style="font-weight:700;color:#4af4ff;font-size:13px;font-family:monospace;">${fmtINR(invested)}</div>
-            </div>
-            <div style="background:#1a1a1a;border-radius:8px;padding:7px 10px;">
-              <div style="font-size:10px;color:#888;margin-bottom:2px;">Current Value</div>
-              <div class="inv-value" style="font-weight:700;color:#3dffa0;font-size:13px;font-family:monospace;">${fmtINR(inv.value)}</div>
-            </div>
-            ${(isMF||isStock)&&inv.shares?`<div style="background:#1a1a1a;border-radius:8px;padding:7px 10px;">
-              <div style="font-size:10px;color:#888;margin-bottom:2px;">${isMF?'Units':'Shares'}</div>
-              <div style="font-weight:700;color:#f5f5f5;font-size:13px;font-family:monospace;">${inv.shares}</div>
-            </div>`:`<div style="background:#1a1a1a;border-radius:8px;padding:7px 10px;">
-              <div style="font-size:10px;color:#888;margin-bottom:2px;">${isMF?'NAV':'Price'}</div>
-              <div style="font-weight:700;color:#f5f5f5;font-size:13px;font-family:monospace;">${inv.price?fmtINR(inv.price):'—'}</div>
-            </div>`}
-            <div style="background:#1a1a1a;border-radius:8px;padding:7px 10px;">
-              <div style="font-size:10px;color:#888;margin-bottom:2px;">P&L</div>
-              <div class="inv-pl" style="font-weight:700;color:${plColor};font-size:13px;">${pl>=0?'+':'-'}${fmtINR(Math.abs(pl))}</div>
-              <div class="inv-pl" style="font-size:10px;color:${plColor};">${pl>=0?'+':''}${plPct}%</div>
-            </div>
-          </div>
-        </div>
-      </div>`;
-    }).join('')+
-    `<div style="border-top:1px solid #2a2a2a;padding:10px 8px 0;display:flex;justify-content:space-between;align-items:center;">
-      <span style="font-weight:800;color:#888;font-size:12px;text-transform:uppercase;letter-spacing:1px;">Total Portfolio</span>
-      <span class="inv-value" style="font-weight:800;color:#3dffa0;font-size:16px;font-family:monospace;">${fmtINR(total)}</span>
-    </div>`;
-
-  document.getElementById('inv-donut').innerHTML=slices.length===0?
-    '<div style="color:#888;font-size:13px;">Add holdings to see allocation.</div>':
-    `<div style="display:flex;justify-content:center;margin-bottom:14px;">${makeDonut(slices,130,24)}</div>
-    ${Object.entries(byType).filter(([,v])=>v>0).map(([t,v])=>`
-      <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
-        <div style="display:flex;align-items:center;gap:6px;">
-          <div style="width:7px;height:7px;border-radius:50%;background:${INV_COLORS[t]};"></div>
-          <span style="font-size:12px;">${t}</span>
-        </div>
-        <span style="font-size:12px;font-weight:700;color:${INV_COLORS[t]};">${Math.round((v/total)*100)}%</span>
-      </div>`).join('')}`;
-}
-
 // CALCULATORS
 // ═══════════════════════════════════════════════════════
 function setCalc(id,btn){
