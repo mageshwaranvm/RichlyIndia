@@ -2071,7 +2071,9 @@ function checkDailyAlert(){
 // BUDGET ALERT — check when rendering budget
 // ═══════════════════════════════════════════════════════
 function getBudgetAlerts(){
-  const expByCat=getExpByCat();
+  // Monthly budgets must only be compared with expenses in the current calendar month.
+  // Reuse the same month-scoped calculation as the Budget Planner.
+  const expByCat=getCurrentMonthExpByCat();
   const alerts=[];
   getAllCats().forEach(cat=>{
     const budget=state.budgets[cat]||0;
