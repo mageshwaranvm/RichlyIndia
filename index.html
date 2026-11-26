@@ -2978,8 +2978,16 @@ function toggleMoneySplitDetail(type){
   });
 }
 // ═══════════════════════════════════════════════════════
+function getCurrentMonthExpByCat(){
+  const now=new Date();
+  const monthKey=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  return getAllCats().reduce((a,c)=>({...a,[c]:state.transactions
+    .filter(t=>t.type==='expense'&&t.category===c&&String(t.date||'').slice(0,7)===monthKey)
+    .reduce((s,t)=>s+(+t.amount||0),0)}),{});
+}
 function renderBudget(){
-  const expByCat=getExpByCat();
+  // Budgets are monthly limits; compare them only with expenses from the current month.
+  const expByCat=getCurrentMonthExpByCat();
   const tb=Object.values(state.budgets).reduce((s,v)=>s+(+v||0),0);
   const ts=Object.values(expByCat).reduce((s,v)=>s+v,0);
   const rem=tb-ts;
@@ -2992,16 +3000,16 @@ function renderBudget(){
     const catsEl=document.getElementById(target.cats);
     if(!kpiEl||!catsEl)return;
     kpiEl.innerHTML=[
-      {label:'Total Budget',val:fmtINR(tb),color:'#4af4ff'},
-      {label:'Total Spent',val:fmtINR(ts),color:'#ff6b6b'},
-      {label:'Remaining',val:fmtINR(rem),color:rem>=0?'#3dffa0':'#ff4444'}
+      {label:'Monthly Budget',val:fmtINR(tb),color:'#4af4ff'},
+      {label:'Spent This Month',val:fmtINR(ts),color:'#ff6b6b'},
+      {label:'Monthly Balance',val:fmtINR(rem),color:rem>=0?'#3dffa0':'#ff4444'}
     ].map(k=>`<div class="kpi-card" style="border-top:3px solid ${k.color};text-align:center;"><div class="kpi-label">${k.label}</div><div class="kpi-val" style="color:${k.color};">${k.val}</div></div>`).join('');
     catsEl.innerHTML=getAllCats().map(cat=>{
       const budget=state.budgets[cat]||0,spent=expByCat[cat]||0;
       const pct=budget>0?Math.min(100,Math.round((spent/budget)*100)):0;
-      const over=spent>budget&&budget>0,color=CAT_COLORS[cat];
+      const over=spent>budget&&budget>0,color=CAT_COLORS[cat]||'#888';
       const inputId='budget-'+target.prefix+'-'+cat.replace(/[^a-z]/gi,'_');
-      return `<div class="card"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;"><div><div style="font-weight:800;font-size:14px;">${cat}</div><div style="font-size:11px;color:#888;margin-top:2px;">Spent: <span style="color:${over?'#ff6b6b':'#3dffa0'};font-weight:700;">${fmtINR(spent)}</span></div></div>${makeTag(over?'OVER!':budget>0?pct+'%':'No limit',over?'#ff6b6b':color)}</div><div style="display:flex;gap:8px;margin-bottom:10px;"><input class="form-input" type="number" placeholder="Set budget (₹)..." value="${budget||''}" id="${inputId}" style="flex:1;" onkeydown="if(event.key==='Enter')saveBudget('${cat}','${target.prefix}')"/><button class="btn btn-sm" style="background:${color};color:#000;border-color:${color};" onclick="saveBudget('${cat}','${target.prefix}')">Set</button></div>${makeProgress(pct,over?'#ff4444':color,8)}<div style="display:flex;justify-content:space-between;font-size:10px;color:#888;margin-top:4px;"><span>₹0</span><span>${fmtINR(budget)}</span></div></div>`;
+      return `<div class="card"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;"><div><div style="font-weight:800;font-size:14px;">${cat}</div><div style="font-size:11px;color:#888;margin-top:2px;">Spent this month: <span style="color:${over?'#ff6b6b':'#3dffa0'};font-weight:700;">${fmtINR(spent)}</span></div></div>${makeTag(over?'OVER!':budget>0?pct+'%':'No limit',over?'#ff6b6b':color)}</div><div style="display:flex;gap:8px;margin-bottom:10px;"><input class="form-input" type="number" placeholder="Monthly limit (₹)..." value="${budget||''}" id="${inputId}" style="flex:1;" onkeydown="if(event.key==='Enter')saveBudget('${cat}','${target.prefix}')"/><button class="btn btn-sm" style="background:${color};color:#000;border-color:${color};" onclick="saveBudget('${cat}','${target.prefix}')">Set</button></div>${makeProgress(pct,over?'#ff4444':color,8)}<div style="display:flex;justify-content:space-between;font-size:10px;color:#888;margin-top:4px;"><span>₹0</span><span>${fmtINR(budget)} / month</span></div></div>`;
     }).join('');
   });
 }
