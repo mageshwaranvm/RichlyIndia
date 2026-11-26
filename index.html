@@ -1023,34 +1023,14 @@ body.privacy-mode .result-val{
         <!-- Portfolio Summary -->
         <div class="card-grid-3" id="inv-summary" style="margin-bottom:0;"></div>
 
-        <!-- Portfolio Analysis Tabs -->
-        <div class="filter-bar" style="margin-top:16px;">
-          <button class="filter-btn active" onclick="setInvTab('holdings',this)" id="inv-tab-holdings">📋 Holdings</button>
-          <button class="filter-btn" onclick="setInvTab('sector',this)" id="inv-tab-sector">🥧 By Sector</button>
-          <button class="filter-btn" onclick="setInvTab('stock',this)" id="inv-tab-stock">📊 By Stock</button>
-          <button class="filter-btn" onclick="setInvTab('compare',this)" id="inv-tab-compare">⚖️ vs Ideal</button>
-          <button class="filter-btn" onclick="setInvTab('returns',this)" id="inv-tab-returns">📈 Returns</button>
-        </div>
-
-        <!-- Holdings view (default) -->
+        <!-- Simple portfolio view: summary followed by holdings only -->
         <div id="inv-view-holdings">
-          <div class="card-grid-2">
-            <div class="card"><div class="card-title">Holdings</div><div id="inv-table"></div></div>
-            <div class="card"><div class="card-title">Allocation</div><div id="inv-donut"></div></div>
+          <div class="card">
+            <div class="card-title">Your Holdings</div>
+            <div id="inv-table"></div>
           </div>
+          <div id="inv-donut" style="display:none;"></div>
         </div>
-
-        <!-- Sector view -->
-        <div id="inv-view-sector" style="display:none;"></div>
-
-        <!-- Stock view -->
-        <div id="inv-view-stock" style="display:none;"></div>
-
-        <!-- Compare view -->
-        <div id="inv-view-compare" style="display:none;"></div>
-
-        <!-- Returns view (Absolute / CAGR / XIRR) -->
-        <div id="inv-view-returns" style="display:none;"></div>
       </div>
 
       <!-- ASSETS & DEBTS -->
@@ -7994,7 +7974,7 @@ function renderEmiAmortization(){
   el.innerHTML='<b>Illustrative EMI amortization</b><div class="planning-row"><span>Estimated EMI</span><b>'+fmtINR(emi)+'</b></div><div class="planning-row"><span>Total interest over tenure</span><b>'+fmtINR(interest)+'</b></div><div style="overflow-x:auto"><table style="width:100%;font-size:11px;border-collapse:collapse"><thead><tr><th>Month</th><th>Principal</th><th>Interest</th><th>Balance</th></tr></thead><tbody>'+rows.map(x=>'<tr><td>'+x.m+'</td><td>'+fmtINR(x.paid)+'</td><td>'+fmtINR(x.intr)+'</td><td>'+fmtINR(x.bal)+'</td></tr>').join('')+'</tbody></table></div><div class="planning-muted">Shows the first three instalments and final instalment using current EMI calculator inputs; excludes lender fees, prepayments and rate changes. Use the what-if panel below to model monthly extra principal payments.</div>';
 }
 const _richlyRenderPage=renderPage;
-renderPage=function(p){_richlyRenderPage(p);if(p==='planning')renderPlanningHub();if(p==='calculators'){renderCalculatorQuality();renderEmiAmortization();}if(p==='investments')renderInvAudit();};
+renderPage=function(p){_richlyRenderPage(p);if(p==='planning')renderPlanningHub();if(p==='calculators'){renderCalculatorQuality();renderEmiAmortization();}};
 const _richlyRenderDashboard=renderDashboard;
 renderDashboard=function(){_richlyRenderDashboard();renderActionDashboard();installMoneyToggle();};
 const _richlyInitApp=initApp;
