@@ -7257,7 +7257,13 @@ async function testConnection(){
       dbg.style.color='#3dffa0';
       dbg.innerHTML+='✅ All good! Session: '+(data.session?'Logged in as '+data.session.user.email:'None — enter email & password to login')+'<br>';
     }
-  }catch(easync function loginEmail(){
+  }catch(e){
+    dbg.style.color='#ff6b6b';
+    dbg.innerHTML+='❌ Error: '+e.message+'<br>';
+  }
+}
+
+async function loginEmail(){
   const emailEl=document.getElementById('login-email');
   const passEl=document.getElementById('login-pass');
   const msg=document.getElementById('login-msg');
@@ -7281,7 +7287,7 @@ async function testConnection(){
       showMessage('#ff6b6b','❌ '+error.message);
       return;
     }
-    if(data&&data.session){
+    if(data&&data.session&&data.user){
       showMessage('#3dffa0','✅ Login successful. Opening Richly…');
       currentUser=data.user;
       showApp(data.user);
@@ -7299,11 +7305,6 @@ async function testConnection(){
 
 // Keep the older function name working for any cached/legacy login markup.
 function doLogin(){return loginEmail();}
-  msg.textContent='❌ Error: '+e.message;
-  }finally{
-    if(btn)btn.disabled=false;
-  }
-}
 
 function loginOffline(){
   document.getElementById('login-screen').style.display='none';
