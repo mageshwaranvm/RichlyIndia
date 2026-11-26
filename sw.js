@@ -1,5 +1,5 @@
 // Richly offline shell and network-first data requests.
-const CACHE = 'richly-shell-v5';
+const CACHE = 'richly-shell-v6';
 const SHELL = ['./','./index.html','./manifest.json','./icon-192.png','./icon-512.png'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)).catch(()=>{}));
