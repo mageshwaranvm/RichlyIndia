@@ -5342,10 +5342,7 @@ function editInv(id){
             ${Object.keys(INV_COLORS).map(t=>`<option${t===inv.type?' selected':''}>${t}</option>`).join('')}
           </select>
         </div>
-        <div class="form-group">
-          <label class="form-label">Invested Since (for XIRR)</label>
-          <input id="ei-date-${id}" class="form-input" type="date" value="${inv.investedDate||''}" style="font-size:12px;padding:6px 8px;"/>
-        </div>
+        
         <div style="background:#161616;border-radius:8px;padding:8px 10px;display:flex;flex-direction:column;justify-content:center;gap:3px;">
           <span style="font-size:10px;color:#888;text-transform:uppercase;">P&L</span>
           <span id="ei-pl-${id}" style="font-size:13px;font-weight:700;color:${plColor};">
@@ -6541,7 +6538,7 @@ function renderPortfolioCompare(d){
 }
 
 // ═══════════════════════════════════════════════════════
-// RETURNS TAB — Absolute Return only (no dated cash-flow/XIRR inputs)
+// RETURNS TAB — Absolute Return only (no dated cash-flow return calculation)
 function renderPortfolioReturns(){
   const el=document.getElementById('inv-view-returns');if(!el)return;
   const invs=state.investments;
@@ -6552,9 +6549,9 @@ function renderPortfolioReturns(){
   const rows=invs.map(i=>{
     const invested=Number(i.invested)||Number(i.value)||0,value=Number(i.value)||0;
     const pl=value-invested,plPct=invested>0?(pl/invested)*100:null;
-    return \`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--card-border);gap:10px;"><div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:700;">\${i.name}</div><div style="font-size:10px;color:var(--text2);">Invested \${fmtINR(invested)} · Current \${fmtINR(value)}</div></div><div style="text-align:right;"><div style="font-size:12px;font-weight:700;color:\${pl>=0?'#3ecf8e':'#f16b6b'};">\${pl>=0?'+':''}\${fmtINR(pl)}</div><div style="font-size:11px;color:\${pl>=0?'#3ecf8e':'#f16b6b'};">\${plPct===null?'—':(plPct>=0?'+':'')+plPct.toFixed(2)+'%'}</div></div></div>\`;
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--card-border);gap:10px;"><div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:700;">${i.name}</div><div style="font-size:10px;color:var(--text2);">Invested ${fmtINR(invested)} · Current ${fmtINR(value)}</div></div><div style="text-align:right;"><div style="font-size:12px;font-weight:700;color:${pl>=0?'#3ecf8e':'#f16b6b'};">${pl>=0?'+':''}${fmtINR(pl)}</div><div style="font-size:11px;color:${pl>=0?'#3ecf8e':'#f16b6b'};">${plPct===null?'—':(plPct>=0?'+':'')+plPct.toFixed(2)+'%'}</div></div></div>`;
   }).join('');
-  el.innerHTML=\`<div class="card-grid-3" style="margin-bottom:12px;"><div class="kpi-card"><div class="kpi-label">Total Invested</div><div class="kpi-val" style="font-size:20px;">\${fmtINR(totalInvested)}</div></div><div class="kpi-card"><div class="kpi-label">Current Value</div><div class="kpi-val" style="font-size:20px;">\${fmtINR(totalValue)}</div></div><div class="kpi-card"><div class="kpi-label">Absolute Gain/Loss</div><div class="kpi-val" style="font-size:20px;color:\${gain>=0?'#3ecf8e':'#f16b6b'};">\${gain>=0?'+':''}\${fmtINR(gain)}</div><div style="font-size:11px;color:var(--text2);">\${pct===null?'—':(pct>=0?'+':'')+pct.toFixed(2)+'%'} absolute return</div></div></div><div class="card"><div class="card-title">Returns by Holding</div><div style="font-size:11px;color:var(--text2);margin-bottom:8px;">Absolute return compares current value with recorded invested amount. No purchase dates or cash-flow history required.</div>\${rows||'<div class="planning-muted">Add investments to see returns.</div>'}</div>\`;
+  el.innerHTML=`<div class="card-grid-3" style="margin-bottom:12px;"><div class="kpi-card"><div class="kpi-label">Total Invested</div><div class="kpi-val" style="font-size:20px;">${fmtINR(totalInvested)}</div></div><div class="kpi-card"><div class="kpi-label">Current Value</div><div class="kpi-val" style="font-size:20px;">${fmtINR(totalValue)}</div></div><div class="kpi-card"><div class="kpi-label">Absolute Gain/Loss</div><div class="kpi-val" style="font-size:20px;color:${gain>=0?'#3ecf8e':'#f16b6b'};">${gain>=0?'+':''}${fmtINR(gain)}</div><div style="font-size:11px;color:var(--text2);">${pct===null?'—':(pct>=0?'+':'')+pct.toFixed(2)+'%'} absolute return</div></div></div><div class="card"><div class="card-title">Returns by Holding</div><div style="font-size:11px;color:var(--text2);margin-bottom:8px;">Absolute return compares current value with recorded invested amount. No purchase dates or cash-flow history required.</div>${rows||'<div class="planning-muted">Add investments to see returns.</div>'}</div>`;
 }
 let currentInvTab='holdings';
 function setInvTab(tab,btn){
