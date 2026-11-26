@@ -7289,9 +7289,7 @@ async function loginEmail(){
     }
     if(data&&data.session&&data.user){
       showMessage('#3dffa0','✅ Login successful. Opening Richly…');
-      currentUser=data.user;
-      showApp(data.user);
-      loadFromSupabase();
+      // The Supabase auth-state listener opens the app and loads cloud data.
     }else{
       showMessage('#ff6b6b','Login did not return an active session. Please try again.');
     }
