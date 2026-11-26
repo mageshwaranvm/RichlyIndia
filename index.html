@@ -774,8 +774,8 @@ body.privacy-mode .result-val{
 
         <!-- Budget view (moved from separate page) -->
         <div id="exp-view-budget" style="display:none;">
-          <div class="card-grid-3" id="budget-kpis"></div>
-          <div class="card-grid-2" id="budget-cats"></div>
+          <div class="card-grid-3" id="exp-budget-kpis"></div>
+          <div class="card-grid-2" id="exp-budget-cats"></div>
         </div>
 
         <!-- Insights view -->
@@ -2027,6 +2027,7 @@ function closeMenu(){
 }
 function renderPage(p){
   if(p==='dashboard'){renderDashboard();checkDailyAlert();}
+  if(p==='budget'){renderBudget();}
   if(p==='expenses'){renderExpenses();}
   if(p==='goals')renderGoals();
   if(p==='analytics')renderAnalytics();
@@ -2979,26 +2980,38 @@ function toggleMoneySplitDetail(type){
 // ═══════════════════════════════════════════════════════
 function renderBudget(){
   const expByCat=getExpByCat();
-  const tb=Object.values(state.budgets).reduce((s,v)=>s+v,0);
+  const tb=Object.values(state.budgets).reduce((s,v)=>s+(+v||0),0);
   const ts=Object.values(expByCat).reduce((s,v)=>s+v,0);
   const rem=tb-ts;
-  document.getElementById('budget-kpis').innerHTML=[
-    {label:"Total Budget",val:fmtINR(tb),color:"#4af4ff"},
-    {label:"Total Spent",val:fmtINR(ts),color:"#ff6b6b"},
-    {label:"Remaining",val:fmtINR(rem),color:rem>=0?"#3dffa0":"#ff4444"},
-  ].map(k=>`<div class="kpi-card" style="border-top:3px solid ${k.color};text-align:center;"><div class="kpi-label">${k.label}</div><div class="kpi-val" style="color:${k.color};">${k.val}</div></div>`).join('');
-
-  document.getElementById('budget-cats').innerHTML=getAllCats().map(cat=>{
-    const budget=state.budgets[cat]||0,spent=expByCat[cat]||0;
-    const pct=budget>0?Math.min(100,Math.round((spent/budget)*100)):0;
-    const over=spent>budget&&budget>0,color=CAT_COLORS[cat];
-    return`<div class="card"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;"><div><div style="font-weight:800;font-size:14px;">${cat}</div><div style="font-size:11px;color:#888;margin-top:2px;">Spent: <span style="color:${over?'#ff6b6b':'#3dffa0'};font-weight:700;">${fmtINR(spent)}</span></div></div>${makeTag(over?"OVER!":budget>0?pct+"%":"No limit",over?"#ff6b6b":color)}</div><div style="display:flex;gap:8px;margin-bottom:10px;"><input class="form-input" type="number" placeholder="Set budget (₹)..." value="${budget||''}" id="budget-${cat.replace(/[^a-z]/gi,'_')}" style="flex:1;" onkeydown="if(event.key==='Enter')saveBudget('${cat}')"/><button class="btn btn-sm" style="background:${color};color:#000;border-color:${color};" onclick="saveBudget('${cat}')">Set</button></div>${makeProgress(pct,over?"#ff4444":color,8)}<div style="display:flex;justify-content:space-between;font-size:10px;color:#888;margin-top:4px;"><span>₹0</span><span>${fmtINR(budget)}</span></div></div>`;
-  }).join('');
+  const targets=[
+    {kpi:'budget-kpis',cats:'budget-cats',prefix:'planner'},
+    {kpi:'exp-budget-kpis',cats:'exp-budget-cats',prefix:'expense'}
+  ];
+  targets.forEach(target=>{
+    const kpiEl=document.getElementById(target.kpi);
+    const catsEl=document.getElementById(target.cats);
+    if(!kpiEl||!catsEl)return;
+    kpiEl.innerHTML=[
+      {label:'Total Budget',val:fmtINR(tb),color:'#4af4ff'},
+      {label:'Total Spent',val:fmtINR(ts),color:'#ff6b6b'},
+      {label:'Remaining',val:fmtINR(rem),color:rem>=0?'#3dffa0':'#ff4444'}
+    ].map(k=>`<div class="kpi-card" style="border-top:3px solid ${k.color};text-align:center;"><div class="kpi-label">${k.label}</div><div class="kpi-val" style="color:${k.color};">${k.val}</div></div>`).join('');
+    catsEl.innerHTML=getAllCats().map(cat=>{
+      const budget=state.budgets[cat]||0,spent=expByCat[cat]||0;
+      const pct=budget>0?Math.min(100,Math.round((spent/budget)*100)):0;
+      const over=spent>budget&&budget>0,color=CAT_COLORS[cat];
+      const inputId='budget-'+target.prefix+'-'+cat.replace(/[^a-z]/gi,'_');
+      return `<div class="card"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;"><div><div style="font-weight:800;font-size:14px;">${cat}</div><div style="font-size:11px;color:#888;margin-top:2px;">Spent: <span style="color:${over?'#ff6b6b':'#3dffa0'};font-weight:700;">${fmtINR(spent)}</span></div></div>${makeTag(over?'OVER!':budget>0?pct+'%':'No limit',over?'#ff6b6b':color)}</div><div style="display:flex;gap:8px;margin-bottom:10px;"><input class="form-input" type="number" placeholder="Set budget (₹)..." value="${budget||''}" id="${inputId}" style="flex:1;" onkeydown="if(event.key==='Enter')saveBudget('${cat}','${target.prefix}')"/><button class="btn btn-sm" style="background:${color};color:#000;border-color:${color};" onclick="saveBudget('${cat}','${target.prefix}')">Set</button></div>${makeProgress(pct,over?'#ff4444':color,8)}<div style="display:flex;justify-content:space-between;font-size:10px;color:#888;margin-top:4px;"><span>₹0</span><span>${fmtINR(budget)}</span></div></div>`;
+    }).join('');
+  });
 }
-function saveBudget(cat){
-  const id=cat.replace(/[^a-z]/gi,'_');
-  const v=parseFloat(document.getElementById('budget-'+id).value);
-  if(!isNaN(v)&&v>=0){state.budgets[cat]=v;renderBudget();toast();}
+function saveBudget(cat,prefix){
+  const targetPrefix=prefix||'planner';
+  const id='budget-'+targetPrefix+'-'+cat.replace(/[^a-z]/gi,'_');
+  const input=document.getElementById(id);
+  if(!input)return;
+  const v=parseFloat(input.value);
+  if(!isNaN(v)&&v>=0){state.budgets[cat]=v;saveData();renderBudget();toast();}
 }
 
 // ═══════════════════════════════════════════════════════
