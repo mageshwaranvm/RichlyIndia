@@ -7777,16 +7777,19 @@ try{richlyExtras={...richlyExtras,...JSON.parse(localStorage.getItem(extrasStora
 function persistRichlyExtras(){try{localStorage.setItem(extrasStorageKey(),JSON.stringify(richlyExtras));}catch(e){alert('Could not save planning data on this device.');}}
 
 // ── Default-hidden money toggle on Dashboard ─────────────────────────
+let moneyVisibleSession=false;
+let moneyVisibilityInitialized=false;
 function setMoneyVisibility(show){
-  document.body.classList.toggle('money-hidden',!show);
+  moneyVisibleSession=!!show;
+  document.body.classList.toggle('money-hidden',!moneyVisibleSession);
   const b=document.getElementById('privacy-toggle-btn');
   if(b){
-    b.textContent=show?'🔒 Hide amounts':'🔓 Show amounts';
-    b.style.borderColor=show?'var(--gold)':'#333';
-    b.style.color=show?'var(--gold)':'#f5f5f5';
+    b.textContent=moneyVisibleSession?'🔒 Hide amounts':'🔓 Show amounts';
+    b.style.borderColor=moneyVisibleSession?'var(--gold)':'#333';
+    b.style.color=moneyVisibleSession?'var(--gold)':'#f5f5f5';
   }
 }
-function toggleMoneyVisibility(){setMoneyVisibility(document.body.classList.contains('money-hidden'));}
+function toggleMoneyVisibility(){setMoneyVisibility(!moneyVisibleSession);}
 function installMoneyToggle(){
   // Dashboard no longer has its own amount visibility control.
   const b=document.getElementById('dash-privacy-toggle');
@@ -7954,8 +7957,26 @@ renderPage=function(p){_richlyRenderPage(p);if(p==='planning')renderPlanningHub(
 const _richlyRenderDashboard=renderDashboard;
 renderDashboard=function(){_richlyRenderDashboard();renderActionDashboard();};
 const _richlyInitApp=initApp;
-initApp=function(){_richlyInitApp();installQuickAdd();installMobileNav();setMoneyVisibility(false);renderActionDashboard();};
-document.addEventListener('DOMContentLoaded',()=>{installQuickAdd();installMobileNav();setMoneyVisibility(false);});
+initApp=function(){
+  _richlyInitApp();
+  installQuickAdd();
+  installMobileNav();
+  if(!moneyVisibilityInitialized){
+    moneyVisibilityInitialized=true;
+    setMoneyVisibility(false);
+  }else{
+    setMoneyVisibility(moneyVisibleSession);
+  }
+  renderActionDashboard();
+};
+document.addEventListener('DOMContentLoaded',()=>{
+  installQuickAdd();
+  installMobileNav();
+  if(!moneyVisibilityInitialized){
+    moneyVisibilityInitialized=true;
+    setMoneyVisibility(false);
+  }
+});
 </script>
 
 <script>
