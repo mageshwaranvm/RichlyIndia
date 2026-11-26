@@ -5216,10 +5216,10 @@ function addMF(){
   state.investments.push({
     id:uid(),name,ticker:document.getElementById('mf-ticker').value.trim(),
     shares:0,price:0,value:curval,invested,
-    investedDate:document.getElementById('mf-date').value||'',
+    
     type:'Mutual Fund',color:INV_COLORS['Mutual Fund'],category:'mf'
   });
-  ['mf-name','mf-ticker','mf-invested','mf-curval','mf-date'].forEach(id=>document.getElementById(id).value='');
+  ['mf-name','mf-ticker','mf-invested','mf-curval'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('mf-pl').style.display='none';
   saveData();renderInvestments();updateHeader();autoSnapshot();toast();
 }
@@ -5247,10 +5247,10 @@ function addStock(){
   state.investments.push({
     id:uid(),name,ticker:document.getElementById('st-ticker').value.trim(),
     shares:0,price:0,value:curval,invested,
-    investedDate:document.getElementById('st-date').value||'',
+    
     type,color:INV_COLORS[type]||'#f0ff44',category:'stock'
   });
-  ['st-name','st-ticker','st-invested','st-curval','st-date'].forEach(id=>document.getElementById(id).value='');
+  ['st-name','st-ticker','st-invested','st-curval'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('st-pl').style.display='none';
   saveData();renderInvestments();updateHeader();autoSnapshot();toast();
 }
@@ -5270,8 +5270,8 @@ function addOther(){
   const type=document.getElementById('oth-type').value;
   if(!name||invested<=0)return alert('Please enter name and invested amount.');
   state.investments.push({id:uid(),name,ticker:document.getElementById('oth-ticker').value.trim(),
-    shares:0,price:0,value:curval,invested,investedDate:document.getElementById('oth-date').value||'',type,color:INV_COLORS[type]||'#aaa'});
-  ['oth-name','oth-ticker','oth-invested','oth-curval','oth-date'].forEach(id=>document.getElementById(id).value='');
+    shares:0,price:0,value:curval,invested,type,color:INV_COLORS[type]||'#aaa'});
+  ['oth-name','oth-ticker','oth-invested','oth-curval'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('oth-pl').style.display='none';
   saveData();renderInvestments();updateHeader();autoSnapshot();toast();
 }
@@ -6229,7 +6229,6 @@ function saveInvEdit(id){
   inv.invested=parseFloat(document.getElementById('ei-invested-'+id)?.value)||curval;
   inv.type=document.getElementById('ei-type-'+id)?.value||inv.type;
   inv.qty=parseFloat(document.getElementById('ei-qty-'+id)?.value)||inv.qty||0;
-  inv.investedDate=document.getElementById('ei-date-'+id)?.value||'';
   inv.color=INV_COLORS[inv.type]||'#aaa';
   saveData();renderInvestments();updateHeader();autoSnapshot();toast();
 }
@@ -6266,6 +6265,34 @@ function getSector(inv){
   return'Other';
 }
 
+// Render the actual holdings list, summary and allocation on the Investments page.
+function renderInvestments(){
+  const invs=Array.isArray(state.investments)?state.investments:[];
+  const summary=document.getElementById('inv-summary');
+  const table=document.getElementById('inv-table');
+  const donut=document.getElementById('inv-donut');
+  const totalValue=invs.reduce((s,i)=>s+(Number(i.value)||0),0);
+  const totalInvested=invs.reduce((s,i)=>s+(Number(i.invested)||Number(i.value)||0),0);
+  const gain=totalValue-totalInvested;
+  const pct=totalInvested>0?(gain/totalInvested)*100:null;
+  if(summary) summary.innerHTML='<div class="kpi-card"><div class="kpi-label">Total Invested</div><div class="kpi-val">'+fmtINR(totalInvested)+'</div></div><div class="kpi-card"><div class="kpi-label">Current Value</div><div class="kpi-val">'+fmtINR(totalValue)+'</div></div><div class="kpi-card"><div class="kpi-label">Absolute Gain/Loss</div><div class="kpi-val" style="color:'+(gain>=0?'#3ecf8e':'#f16b6b')+'">'+(gain>=0?'+':'')+fmtINR(gain)+'</div><div class="kpi-label">'+(pct===null?'—':(pct>=0?'+':'')+pct.toFixed(2)+'%')+'</div></div>';
+  if(!table||!donut)return;
+  if(!invs.length){table.innerHTML='<div class="planning-muted" style="padding:18px;text-align:center;">No investment holdings found. Import a broker CSV or add an investment manually.</div>';donut.innerHTML='<div class="planning-muted" style="padding:18px;text-align:center;">No allocation data yet.</div>';return;}
+  const rows=invs.map((inv)=>{
+    const invested=Number(inv.invested)||Number(inv.value)||0;
+    const value=Number(inv.value)||0;
+    const pl=value-invested;
+    const plPct=invested>0?(pl/invested)*100:null;
+    const id=String(inv.id||'');
+    const safeName=String(inv.name||'Unnamed investment').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    return '<div id="inv-row-'+id+'" style="padding:12px 8px;border-bottom:1px solid var(--border);"><div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;"><div style="min-width:0;flex:1;"><div style="font-weight:700;font-size:13px;overflow-wrap:anywhere;">'+safeName+'</div><div style="font-size:11px;color:var(--text2);margin-top:3px;">'+String(inv.type||'Investment')+(inv.ticker?' · '+String(inv.ticker):'')+'</div><div style="font-size:11px;color:var(--text2);margin-top:4px;">Invested '+fmtINR(invested)+' · Current '+fmtINR(value)+'</div></div><div style="text-align:right;flex-shrink:0;"><div style="font-weight:700;color:'+(pl>=0?'#3ecf8e':'#f16b6b')+';">'+(pl>=0?'+':'')+fmtINR(pl)+'</div><div style="font-size:11px;color:'+(pl>=0?'#3ecf8e':'#f16b6b')+';">'+(plPct===null?'—':(plPct>=0?'+':'')+plPct.toFixed(2)+'%')+'</div><div style="display:flex;gap:5px;justify-content:flex-end;margin-top:7px;"><button class="filter-btn" onclick="editInv(\''+id+'\')">Edit</button><button class="filter-btn" onclick="deleteInv(\''+id+'\')">Delete</button></div></div></div></div>';
+  }).join('');
+  table.innerHTML=rows;
+  const sectors=invs.reduce((a,inv)=>{const key=getSector(inv);a[key]=(a[key]||0)+(Number(inv.value)||0);return a;},{});
+  const total=Object.values(sectors).reduce((a,v)=>a+v,0)||1;
+  const allocation=Object.entries(sectors).map(([name,value])=>({name,value,pct:value/total*100,color:SECTOR_COLORS_PA[name]||'#94a3b8'})).sort((a,b)=>b.value-a.value);
+  donut.innerHTML=makeSVGPie(allocation,190,48,84)+'<div style="margin-top:10px;">'+allocation.map(x=>'<div style="display:flex;justify-content:space-between;gap:8px;font-size:11px;padding:4px 0;"><span><i style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+x.color+';margin-right:6px;"></i>'+x.name+'</span><b>'+x.pct.toFixed(1)+'% · '+fmtINR(x.value)+'</b></div>').join('')+'</div>';
+}
 function buildPortfolioData(){
   const invs=state.investments;
   if(invs.length===0)return null;
