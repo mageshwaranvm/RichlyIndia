@@ -1566,7 +1566,7 @@ body.privacy-mode .result-val{
         <!-- Quick toggles -->
         <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
           <button onclick="document.getElementById('theme-settings').scrollIntoView({behavior:'smooth',block:'center'})" style="flex:1;min-width:120px;background:var(--bg2);border:1px solid var(--card-border);color:var(--text);border-radius:10px;padding:10px 14px;font-size:13px;font-weight:600;cursor:pointer;">🎨 Themes</button>
-          <button id="privacy-toggle-btn" onclick="togglePrivacy(this)" style="flex:1;min-width:120px;background:var(--bg2);border:1px solid var(--card-border);color:var(--text);border-radius:10px;padding:10px 14px;font-size:13px;font-weight:600;cursor:pointer;">🔏 Privacy Mode: OFF</button>
+          <button id="privacy-toggle-btn" onclick="togglePrivacy(this)" style="flex:1;min-width:120px;background:var(--bg2);border:1px solid var(--card-border);color:var(--text);border-radius:10px;padding:10px 14px;font-size:13px;font-weight:600;cursor:pointer;">🔓 Show amounts</button>
         </div>
         <div class="card-grid-2">
           <div class="card" id="theme-settings" style="border-top:3px solid var(--gold);">
@@ -3682,13 +3682,7 @@ function applyTheme(){let t=localStorage.getItem('richly_theme')||'richly';if(t=
 
 // ── Privacy Mode ───────────────────────────────────────
 function togglePrivacy(btn){
-  document.body.classList.toggle('privacy-mode');
-  const on=document.body.classList.contains('privacy-mode');
-  document.querySelectorAll('#privacy-toggle-btn').forEach(b=>{
-    b.textContent=on?'🔏 Privacy Mode: ON':'🔏 Privacy Mode: OFF';
-    b.style.borderColor=on?'var(--gold)':'#333';
-    b.style.color=on?'var(--gold)':'#f5f5f5';
-  });
+  toggleMoneyVisibility(document.body.classList.contains('money-hidden'));
 }
 
 // ═══════════════════════════════════════════════════════
@@ -7785,17 +7779,18 @@ function persistRichlyExtras(){try{localStorage.setItem(extrasStorageKey(),JSON.
 // ── Default-hidden money toggle on Dashboard ─────────────────────────
 function setMoneyVisibility(show){
   document.body.classList.toggle('money-hidden',!show);
-  localStorage.setItem('richly_money_visible_session',show?'1':'0');
-  const b=document.getElementById('dash-privacy-toggle');if(b)b.textContent=show?'◉ Hide amounts':'◎ Show amounts';
+  const b=document.getElementById('privacy-toggle-btn');
+  if(b){
+    b.textContent=show?'🔒 Hide amounts':'🔓 Show amounts';
+    b.style.borderColor=show?'var(--gold)':'#333';
+    b.style.color=show?'var(--gold)':'#f5f5f5';
+  }
 }
 function toggleMoneyVisibility(){setMoneyVisibility(document.body.classList.contains('money-hidden'));}
 function installMoneyToggle(){
-  const hero=document.getElementById('dash-nw-hero');if(!hero||document.getElementById('dash-privacy-toggle'))return;
-  const b=document.createElement('button');b.id='dash-privacy-toggle';b.type='button';b.onclick=toggleMoneyVisibility;
-  b.style.cssText='position:absolute;right:12px;bottom:12px;';
-  b.textContent='◎ Show amounts';
-  hero.style.position='relative';hero.appendChild(b);
-  document.body.classList.add('money-hidden'); // Always start hidden on app open.
+  // Dashboard no longer has its own amount visibility control.
+  const b=document.getElementById('dash-privacy-toggle');
+  if(b)b.remove();
 }
 
 // ── Universal quick add ───────────────────────────────────────────────
@@ -7957,10 +7952,10 @@ function renderEmiAmortization(){
 const _richlyRenderPage=renderPage;
 renderPage=function(p){_richlyRenderPage(p);if(p==='planning')renderPlanningHub();if(p==='calculators'){renderCalculatorQuality();renderEmiAmortization();}};
 const _richlyRenderDashboard=renderDashboard;
-renderDashboard=function(){_richlyRenderDashboard();renderActionDashboard();installMoneyToggle();};
+renderDashboard=function(){_richlyRenderDashboard();renderActionDashboard();};
 const _richlyInitApp=initApp;
 initApp=function(){_richlyInitApp();installQuickAdd();installMobileNav();setMoneyVisibility(false);renderActionDashboard();};
-document.addEventListener('DOMContentLoaded',()=>{installMoneyToggle();installQuickAdd();installMobileNav();document.body.classList.add('money-hidden');});
+document.addEventListener('DOMContentLoaded',()=>{installQuickAdd();installMobileNav();setMoneyVisibility(false);});
 </script>
 
 <script>
