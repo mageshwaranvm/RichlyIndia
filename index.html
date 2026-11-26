@@ -7939,25 +7939,6 @@ function renderPlanningHub(){
   if(a){const due=richlyExtras.reminders.filter(x=>x.status!=='paid'&&x.date>=today()&&x.date<=new Date(Date.now()+7*86400000).toISOString().slice(0,10));a.innerHTML=due.length?'<div class="card" style="border-left:3px solid #ff8c1a;"><b>Upcoming in 7 days</b><div>'+due.map(x=>x.title+' · '+fmtINR(x.amount)+' · '+x.date).join('<br>')+'</div></div>':'';}
 }
 
-// ── Investment return detail: absolute returns only ──
-function updateInvAudit(id,key,val){
-  const inv=state.investments.find(x=>x.id===id);if(!inv)return;
-  if(['dividends','interest','realizedGain','benchmarkValue'].includes(key))val=Number(val)||0;
-  inv[key]=val;saveData();renderInvAudit();
-}
-function renderInvAudit(){
-  const table=document.getElementById('inv-table');if(!table)return;
-  let box=document.getElementById('inv-valuation-audit');if(!box){box=document.createElement('div');box.id='inv-valuation-audit';box.className='card';table.insertAdjacentElement('afterend',box);}
-  box.innerHTML='<div class="card-title">Investment value & absolute returns</div>'+state.investments.map(inv=>{
-    const invested=Number(inv.invested)||0,value=Number(inv.value)||0;
-    const gain=value-invested,returnPct=invested>0?(gain/invested)*100:null;
-    const income=(Number(inv.dividends)||0)+(Number(inv.interest)||0);
-    return '<div style="padding:12px 0;border-bottom:1px solid var(--border);"><b>'+inv.name+'</b>'+
-      '<div class="form-grid form-grid-2" style="margin-top:8px;"><div><label class="form-label">Value source</label><input class="form-input" placeholder="Broker / AMC / manual" value="'+(inv.valueSource||'').replace(/"/g,'&quot;')+'" onchange="updateInvAudit(\''+inv.id+'\',\'valueSource\',this.value)"/></div><div><label class="form-label">Dividends received ₹</label><input class="form-input" type="number" value="'+(inv.dividends||0)+'" onchange="updateInvAudit(\''+inv.id+'\',\'dividends\',this.value)"/></div><div><label class="form-label">Interest received ₹</label><input class="form-input" type="number" value="'+(inv.interest||0)+'" onchange="updateInvAudit(\''+inv.id+'\',\'interest\',this.value)"/></div><div><label class="form-label">Realized gain ₹</label><input class="form-input" type="number" value="'+(inv.realizedGain||0)+'" onchange="updateInvAudit(\''+inv.id+'\',\'realizedGain\',this.value)"/></div><div><label class="form-label">Benchmark value ₹ (optional)</label><input class="form-input" type="number" value="'+(inv.benchmarkValue||0)+'" onchange="updateInvAudit(\''+inv.id+'\',\'benchmarkValue\',this.value)"/></div></div>'+
-      '<div class="planning-row"><span>Total invested</span><b>'+fmtINR(invested)+'</b></div><div class="planning-row"><span>Current value</span><b>'+fmtINR(value)+'</b></div><div class="planning-row"><span>Absolute unrealized gain/loss</span><b>'+fmtINR(gain)+'</b></div><div class="planning-row"><span>Absolute return</span><b>'+(returnPct===null?'—':returnPct.toFixed(2)+'%')+'</b></div><div class="planning-row"><span>Income received (dividend + interest)</span><b>'+fmtINR(income)+'</b></div><div class="planning-row"><span>Realized gain/loss</span><b>'+fmtINR(Number(inv.realizedGain)||0)+'</b></div><div class="planning-row"><span>Benchmark comparison</span><b>'+(inv.benchmarkValue?fmtINR(value-(Number(inv.benchmarkValue)||0))+' vs entered benchmark':'Not set')+'</b></div><div class="planning-muted">Absolute return compares current value with the recorded invested amount. Keep the current value updated from your broker or AMC statement for a meaningful result.</div></div>';
-  }).join('')||'<div class="planning-muted">Add holdings to see investment details.</div>';
-}
-
 // ── Calculator assumptions, checks and EMI amortization ────────────────
 function renderCalculatorQuality(){
   const page=document.getElementById('page-calculators');if(!page||document.getElementById('calc-quality-note'))return;
