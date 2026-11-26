@@ -2622,7 +2622,7 @@ function renderDashboard(){
       reviewEl.innerHTML='<div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;">'+
         '<div><div class="card-title" style="margin-bottom:3px;color:#ff8c1a;">⚠️ Balance Review Needed</div>'+
         '<div style="font-size:11px;color:#888;">'+(parts.join(' · ')||'Some financial data needs review')+'</div></div>'+
-        '<button onclick="goTo(\\'assets\\',document.querySelector(\\'.nav-btn[onclick*=assets]\\'))" style="background:#ff8c1a;color:#000;border:none;border-radius:8px;padding:7px 12px;font-size:11px;font-weight:800;cursor:pointer;">Review Balances</button>'+
+        '<button onclick="goTo(\'assets\',document.querySelector(\'.nav-btn[onclick*=assets]\'))" style="background:#ff8c1a;color:#000;border:none;border-radius:8px;padding:7px 12px;font-size:11px;font-weight:800;cursor:pointer;">Review Balances</button>'+
       '</div>';
     }
   }
@@ -7809,7 +7809,7 @@ function renderNetWorth(){
     const ok=review.needsReview.length===0&&!snapshotWarn;
     reviewEl.innerHTML=ok
       ? '<div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;"><div><div class="card-title" style="margin-bottom:3px;">✅ Net-Worth Review</div><div style="font-size:11px;color:#888;">Balances are current and the latest snapshot is '+snapshotText+'.</div></div><span style="font-size:11px;color:#3dffa0;font-weight:700;">Ready</span></div>'
-      : '<div><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;"><div><div class="card-title" style="margin-bottom:3px;color:#ff8c1a;">⚠️ Review Before Relying on Net Worth</div><div style="font-size:11px;color:#888;">'+review.needsReview.length+' balance record'+(review.needsReview.length!==1?'s':'')+' need review · snapshot '+snapshotText+'.</div></div><button onclick="goTo(\\'assets\\',document.querySelector(\\'.nav-btn[onclick*=assets]\\'))" style="background:#ff8c1a;color:#000;border:none;border-radius:8px;padding:7px 12px;font-size:11px;font-weight:800;cursor:pointer;">Review</button></div>'+
+      : '<div><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;"><div><div class="card-title" style="margin-bottom:3px;color:#ff8c1a;">⚠️ Review Before Relying on Net Worth</div><div style="font-size:11px;color:#888;">'+review.needsReview.length+' balance record'+(review.needsReview.length!==1?'s':'')+' need review · snapshot '+snapshotText+'.</div></div><button onclick="goTo(\'assets\',document.querySelector(\'.nav-btn[onclick*=assets]\'))" style="background:#ff8c1a;color:#000;border:none;border-radius:8px;padding:7px 12px;font-size:11px;font-weight:800;cursor:pointer;">Review</button></div>'+
         (rows?'<div style="margin-top:8px;">'+rows+'</div>':'')+
         (review.needsReview.length>6?'<div style="font-size:10px;color:#888;margin-top:7px;">+'+(review.needsReview.length-6)+' more records need review.</div>':'')+
       '</div>';
