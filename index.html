@@ -492,10 +492,10 @@ body.privacy-mode .result-val{
     <div id="login-msg" style="font-size:12px;margin-bottom:12px;min-height:18px;"></div>
     <input id="login-email" type="email" placeholder="Email address" style="width:100%;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;padding:11px 14px;color:#f5f5f5;font-size:13px;outline:none;margin-bottom:10px;box-sizing:border-box;"/>
     <input id="login-pass" type="password" placeholder="Password (min 6 characters)" style="width:100%;background:#1e1e1e;border:1px solid #2a2a2a;border-radius:8px;padding:11px 14px;color:#f5f5f5;font-size:13px;outline:none;margin-bottom:16px;box-sizing:border-box;"
-      onkeydown="if(event.key==='Enter')doLogin()"/>
+      onkeydown="if(event.key==='Enter'){event.preventDefault();loginEmail();}"/>
     <!-- Separate Login and Sign Up buttons -->
     <div style="display:flex;gap:10px;margin-bottom:10px;">
-      <button onclick="doLogin()" style="flex:1;background:#f0ff44;color:#000;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:800;cursor:pointer;">Login</button>
+      <button id="login-submit" type="button" onclick="loginEmail()" style="flex:1;background:#f0ff44;color:#000;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:800;cursor:pointer;touch-action:manipulation;">Login</button>
       <button onclick="doSignUp()" style="flex:1;background:transparent;color:#f0ff44;border:2px solid #f0ff44;border-radius:10px;padding:12px;font-size:14px;font-weight:800;cursor:pointer;">Sign Up</button>
     </div>
     <button onclick="loginOffline()" style="width:100%;background:transparent;color:#888;border:1px solid #333;border-radius:10px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;margin-bottom:14px;">
@@ -7257,61 +7257,49 @@ async function testConnection(){
       dbg.style.color='#3dffa0';
       dbg.innerHTML+='✅ All good! Session: '+(data.session?'Logged in as '+data.session.user.email:'None — enter email & password to login')+'<br>';
     }
+  }catch(easync function loginEmail(){
+  const emailEl=document.getElementById('login-email');
+  const passEl=document.getElementById('login-pass');
+  const msg=document.getElementById('login-msg');
+  const btn=document.getElementById('login-submit');
+  if(!emailEl||!passEl||!msg)return;
+
+  const email=emailEl.value.trim();
+  const password=passEl.value;
+  const showMessage=(color,text)=>{msg.style.color=color;msg.textContent=text;};
+
+  if(!email||!password){showMessage('#ff6b6b','Please enter your email and password.');return;}
+  if(password.length<6){showMessage('#ff6b6b','Password must be at least 6 characters.');return;}
+  if(!supabase){showMessage('#ff6b6b','Login service is not ready. Check your connection and reload the app.');return;}
+
+  if(btn){btn.disabled=true;btn.textContent='Signing in…';btn.style.opacity='.7';}
+  showMessage('#888','Connecting securely…');
+
+  try{
+    const {data,error}=await supabase.auth.signInWithPassword({email,password});
+    if(error){
+      showMessage('#ff6b6b,' '❌ '+error.message);
+      return;
+    }
+    if(data&&data.session){
+      showMessage('#3dffa0','✅ Login successful. Opening Richly…');
+      currentUser=data.user;
+      showApp(data.user);
+      loadFromSupabase();
+    }else{
+      showMessage('#ff6b6b','Login did not return an active session. Please try again.');
+    }
   }catch(e){
-    dbg.style.color='#ff6b6b';
-    dbg.innerHTML+='❌ Error: '+e.message+'<br>';
+    console.error('Richly login failed:',e);
+    showMessage('#ff6b6b,' '❌ Login failed: '+(e&&e.message?e.message:'Unexpected error. Please try again.'));
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='Login';btn.style.opacity='1';}
   }
 }
 
-async function loginEmail(){
-  const email=document.getElementById('login-email').value.trim();
-  const pass=document.getElementById('login-pass').value;
-  const msg=document.getElementById('login-msg');
-  const dbg=document.getElementById('debug-msg');
-  const btn=document.querySelector('#login-screen button[onclick="loginEmail()"]');
-  if(!email||!pass){msg.style.color='#ff6b6b';msg.textContent='Please enter email and password.';return;}
-  if(pass.length<6){msg.style.color='#ff6b6b';msg.textContent='Password must be at least 6 characters.';return;}
-  if(!supabase){msg.style.color='#ff6b6b';msg.textContent='❌ Not connected. Check internet.';return;}
-
-  msg.style.color='#888';msg.textContent='⏳ Signing in...';
-  if(dbg)dbg.textContent='';
-  if(btn)btn.disabled=true;
-
-  try{
-    // Always try LOGIN first — never sign up unless login says no account
-    const{data,error}=await supabase.auth.signInWithPassword({email,password:pass});
-
-    if(!error&&data.user){
-      msg.style.color='#3dffa0';
-      msg.textContent='✅ Logged in!';
-      // onAuthStateChange will handle showing the app
-      return;
-    }
-
-    // Only sign up if the error is specifically "Invalid credentials" (no account exists)
-    const errMsg=error?.message||'';
-    if(errMsg.includes('Invalid login credentials')||errMsg.includes('invalid_credentials')){
-      // No account — create one
-      msg.textContent='⏳ Creating new account...';
-      const{data:sd,error:se}=await supabase.auth.signUp({email,password:pass});
-      if(se){
-        msg.style.color='#ff6b6b';
-        msg.textContent='❌ '+se.message;
-      } else if(sd.session){
-        msg.style.color='#3dffa0';
-        msg.textContent='✅ Account created & logged in!';
-      } else {
-        msg.style.color='#f0ff44';
-        msg.textContent='📧 Check your email to confirm, then login again.';
-      }
-    } else {
-      // Any other error — show it directly
-      msg.style.color='#ff6b6b';
-      msg.textContent='❌ '+errMsg;
-    }
-  }catch(e){
-    msg.style.color='#ff6b6b';
-    msg.textContent='❌ Error: '+e.message;
+// Keep the older function name working for any cached/legacy login markup.
+function doLogin(){return loginEmail();}
+  msg.textContent='❌ Error: '+e.message;
   }finally{
     if(btn)btn.disabled=false;
   }
