@@ -6203,6 +6203,9 @@ function saveInvEdit(id){
   inv.invested=parseFloat(document.getElementById('ei-invested-'+id)?.value)||curval;
   inv.type=document.getElementById('ei-type-'+id)?.value||inv.type;
   inv.qty=parseFloat(document.getElementById('ei-qty-'+id)?.value)||inv.qty||0;
+  inv.shares=inv.qty;
+  const avgPrice=parseFloat(document.getElementById('ei-avgprice-'+id)?.value);
+  if(Number.isFinite(avgPrice)&&avgPrice>0)inv.price=avgPrice;
   inv.color=INV_COLORS[inv.type]||'#aaa';
   saveData();renderInvestments();updateHeader();autoSnapshot();toast();
 }
@@ -6257,7 +6260,8 @@ function renderInvestments(){
     const value=Number(inv.value)||0;
     const pl=value-invested;
     const plPct=invested>0?(pl/invested)*100:null;
-    const id=String(inv.id||'');
+    if(!inv.id)inv.id=uid();
+    const id=String(inv.id);
     const safeName=String(inv.name||'Unnamed investment').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     return '<div id="inv-row-'+id+'" style="padding:12px 8px;border-bottom:1px solid var(--border);"><div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;"><div style="min-width:0;flex:1;"><div style="font-weight:700;font-size:13px;overflow-wrap:anywhere;">'+safeName+'</div><div style="font-size:11px;color:var(--text2);margin-top:3px;">'+String(inv.type||'Investment')+(inv.ticker?' · '+String(inv.ticker):'')+'</div><div style="font-size:11px;color:var(--text2);margin-top:4px;">Invested '+fmtINR(invested)+' · Current '+fmtINR(value)+'</div></div><div style="text-align:right;flex-shrink:0;"><div style="font-weight:700;color:'+(pl>=0?'#3ecf8e':'#f16b6b')+';">'+(pl>=0?'+':'')+fmtINR(pl)+'</div><div style="font-size:11px;color:'+(pl>=0?'#3ecf8e':'#f16b6b')+';">'+(plPct===null?'—':(plPct>=0?'+':'')+plPct.toFixed(2)+'%')+'</div><div style="display:flex;gap:5px;justify-content:flex-end;margin-top:7px;"><button class="filter-btn" onclick="editInv(\''+id+'\')">Edit</button><button class="filter-btn" onclick="deleteInv(\''+id+'\')">Delete</button></div></div></div></div>';
   }).join('');
